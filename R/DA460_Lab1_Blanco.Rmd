@@ -1,0 +1,339 @@
+---
+title: "DA 460 - Lab 1"
+author: "Marjorie Blanco"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Handout 1 R: Introduction to data
+
+Data Source: US CDC website.
+
+- genhlth: A categorical vector indicating general health, with categories excellent, very good, good, fair, and poor.
+
+- exerany: A categorical vector, 1 if the respondent exercised in the past month and 0 otherwise.
+
+- hlthplan: A categorical vector, 1 if the respondent has some form of health coverage and 0 otherwise.
+
+- smoke100: A categorical vector, 1 if the respondent has smoked at least 100 cigarettes in their entire life and 0 otherwise.
+
+- height: A numerical vector, respondent's height in inches.
+
+- weight: A numerical vector, respondent's weight in pounds.
+
+- wtdesire: A numerical vector, respondent's desired weight in pounds.
+
+- age: A numerical vector, respondent's age in years.
+
+- gender: A categorical vector, respondent's gender.
+
+## Getting started
+
+```{r}
+# Load BRFSS data
+source("http://www.openintro.org/stat/data/cdc.R")
+
+# view the names of the variables
+names(cdc)
+```
+
+### Exercise 1
+
+How many cases are there in this data set? How many variables? For each variable, identify its data type (e.g. categorical, discrete).
+
+he dimensions of the data frame is `r dim(cdc)`.  There are `r dim(cdc)[1]` records and `r dim(cdc)[2]` variables in this data set.  The variable names are: `r names(cdc)`. 
+
+Four variables are discrete (height, weight, wtdesire and age) and the remaining five are categorical. One categorical variable, genhlth, is ordinal.
+
+- genhlth: categorical (ordinal)
+
+- exerany: categorical 
+
+- hlthplan: categorical
+
+- smoke100: categorical
+
+- height: numerical
+
+- weight: numerical
+
+- wtdesire: numerical
+
+- age: numerical
+
+- gender: categorical
+
+```{r}
+# Look at the first few entries (rows) for our data set
+head(cdc)
+
+# Look at the last few entries (rows) for our data set
+tail(cdc)
+```
+
+## Summaries and tables
+
+```{r}
+# summary statistics for weight
+summary(cdc$weight)
+# mean (average) for weight
+mean(cdc$weight)
+# variance for weight
+var(cdc$weight)
+# median for weight
+median(cdc$weight)
+# compute the interquartile range for the respondents’ weight
+190 - 140
+
+# sample frequency for smoke100
+table(cdc$smoke100)
+
+# relative frequency distribution for smoke100
+table(cdc$smoke100)/20000
+
+# barplot
+barplot(table(cdc$smoke100), main = "Frequency table for Smoke100",
+       xlab = "Smoke100", ylab = "Frequency", sub="Data Source: CDC BRFSS")
+
+# object, a table, called smoke
+smoke <- table(cdc$smoke100)
+# make a bar plot of the entries
+barplot(smoke, main = "Frequency table for Smoke100",
+       xlab = "Smoke100", ylab = "Frequency", sub="Data Source: CDC BRFSS")
+```
+
+### Exercise 2
+
+Create a numerical summary for height and age, and compute the interquartile range for each. Compute the relative frequency distribution for gender and exerany. How many males are in the sample? What proportion of the sample reports being in excellent health?
+
+Interquartile range for height is between `r min(cdc$height)` and `r max(cdc$height)` with a range of `r max(cdc$height) - min(cdc$height)`. 
+Interquartile range for age is between `r min(cdc$age)` and `r max(cdc$age)` with a range of `r max(cdc$age) - min(cdc$age)`. 
+
+There are `r table(cdc$gender)["m"]` males in the sample.
+
+A total of `r table(cdc$genhlth)["excellent"]` out out of `r length(cdc$genhlth)` reported being in excellent health. This is `r (table(cdc$genhlth) / length(cdc$genhlth))["excellent"]*100`% of the sample.
+
+```{r}
+# numerical summary for height and age
+summary(cdc$height)
+summary(cdc$age)
+
+# interquartile range for height and age
+max(cdc$height) - min(cdc$height)
+max(cdc$age) - min(cdc$age)
+
+# frequency distribution for gender and exerany
+table(cdc$gender)
+table(cdc$exerany)
+
+# relative frequency distribution for gender and exerany
+table(cdc$gender) / length(cdc$gender)
+table(cdc$exerany) / length(cdc$exerany)
+
+# frequency distribution and relative frequency distribution for genhlth
+table(cdc$genhlth)
+table(cdc$genhlth) / length(cdc$genhlth)
+```
+
+### Exercise 3
+
+What does the mosaic plot reveal about smoking habits and gender?
+
+The mosaic plot shows than larger proportion of males smoke at least 100 cigarettes than women.
+
+```{r}
+# examine which participants have smoked across each gender
+table(cdc$gender, cdc$smoke100) 
+
+# mosaicplot for gender and smoking habits
+mosaicplot(table(cdc$gender, cdc$smoke100), main = "Gender and Smoked100",
+       ylab = "Smoked100", xlab = "Gender")
+```
+
+## Interlude: How R thinks about data
+
+```{r}
+# size of the data frame 
+dim(cdc)
+# sixth variable of the 567th respondent
+cdc[567,6]
+names(cdc)
+# weights for the first 10 respondents
+cdc[1:10,6]
+# range 1 through 10
+1:10
+# data for the first 10 respondent
+cdc[1:10,]
+```
+
+```{r, results='hide'}
+# see the weights for all 20,000 respondents
+cdc[,6]
+cdc$weight
+```
+
+```{r}
+# see the weight for the 567th respondent
+cdc$weight[567]
+# see the weight for first 10 respondents
+cdc$weight[1:10]
+```
+
+## A little more on subsetting
+
+```{r, results='hide'}
+# test condition to check if person was male 
+cdc$gender == "m"
+# test condition to check if person was older than 30 
+cdc$age > 30
+```
+
+```{r}
+# extract just the data for the men in the sample
+mdata <- subset(cdc, cdc$gender == "m")
+# shows first few rows for mdata
+head(mdata)
+```
+
+```{r}
+#  data for men over the age of 30.
+m_and_over30 <- subset(cdc, gender == "m" & age > 30)
+#  data for people who are men or over the age of 30 
+m_or_over30 <- subset(cdc, gender == "m" | age > 30)
+```
+
+### Exercise 4
+
+Create a new object called under23_and_smoke that contains all observations of respondents under the age of 23 that have smoked 100 cigarettes in their lifetime. Write the command you used to create the new object as the answer to this exercise.
+
+```{r}
+# contains all observations of respondents under the age of 23 that have smoked 100 cigarettes in their lifetime
+under23_and_smoke <- subset(cdc, age < 23 & smoke100 == 1)
+# shows first few rows for under23_and_smoke
+head(under23_and_smoke)
+```
+
+## Quantitative data
+
+```{r}
+# construct a box plot for a single variable: height
+boxplot(cdc$height, main = "Boxplot for Height", ylab = "Height",
+        sub="Data Source: CDC BRFSS")
+# construct a box plot for a single variable (outliers removed): height
+boxplot(cdc$height, main = "Boxplot for Height", ylab = "Height",
+        outline = FALSE,
+        sub="Data Source: CDC BRFSS")
+
+# examining the summary statistics for a single variable: height
+summary(cdc$height)
+
+# compare the heights of men and women
+boxplot(cdc$height ~ cdc$gender, main = "Height by Gender", 
+        xlab = "Gender", ylab = "Height",
+        sub="Data Source: CDC BRFSS")
+boxplot(cdc$height ~ cdc$gender, main = "Height by Gender", 
+        xlab = "Gender", ylab = "Height",
+        outline = FALSE,
+        sub="Data Source: CDC BRFSS")
+
+# calculate BMI
+# IQR range is larger in fair. Poor shows higher median BMI
+cdc$bmi <- bmi <- (cdc$weight / cdc$height^2) * 703
+# compare the bmi and general health of men and women
+boxplot(bmi ~ cdc$genhlth, main="BMI by General Health", 
+        ylab = "BMI", xlab="General Health", 
+        sub="Data Source: CDC BRFSS")
+boxplot(bmi ~ cdc$genhlth, main="BMI by General Health", 
+        ylab = "BMI", xlab="General Health", 
+        outline = FALSE,
+        sub="Data Source: CDC BRFSS")
+
+# summary stats
+summary(cdc$bmi[cdc$genhlth == "excellent"])
+summary(cdc$bmi[cdc$genhlth == "very good"])
+summary(cdc$bmi[cdc$genhlth == "good"])
+summary(cdc$bmi[cdc$genhlth == "fair"])
+summary(cdc$bmi[cdc$genhlth == "poor"])
+```
+
+### Exercise 5
+
+What does this box plot show? Pick another categorical variable from the data set and see how it relates to BMI. List the variable you chose, why you might think it would have a relationship to BMI, and indicate what the figure seems to suggest.
+
+Hypothesis: Respondent that exercised in the past month will have lower BMI on average compared to those that do not.  This figure seems to suggest that excercise is a significant factor.
+
+Conclusion: People with lower BMI have excersiced recently.
+
+```{r}
+# IQR range is larger in those who exercised in the past month. Those that di not exercise in the past month shows higher median BMI
+boxplot(bmi ~ cdc$exerany, main="BMI by Exercised", 
+        ylab = "BMI", xlab="Exercised in the past month")
+boxplot(bmi ~ cdc$exerany, main="BMI by Exercised", 
+        ylab = "BMI", xlab="Exercised in the past month",
+        outline = FALSE)
+summary(cdc$bmi[cdc$exerany == 1])
+summary(cdc$bmi[cdc$exerany == 0])
+```
+
+Hypothesis: Respondent that have some form of health coverage will have similar BMI on average compared to those that do not.  This figure seems to suggest that having some form of health coverage is not significant factor.
+
+Conclusion: People with some form of health coverage and those that do not have similar BMI.
+
+```{r}
+# IQR range and median BMI is larger in those that have some form of health coverage.
+boxplot(bmi ~ cdc$hlthplan, main="BMI by Health Plan", 
+        ylab = "BMI", xlab="Health Plan")
+boxplot(bmi ~ cdc$hlthplan, main="BMI by Health Plan", 
+        ylab = "BMI", xlab="Health Plan",
+        outline = FALSE)
+summary(cdc$bmi[cdc$hlthplan == 1])
+summary(cdc$bmi[cdc$hlthplan == 0])
+```
+
+Conclusion: People with lower BMI have not smoked at least 100 cigarettes in their entire life.
+
+```{r}
+# IQR range and median BMI is larger in those that smoked at least 100 cigarettes in their entire life.
+boxplot(bmi ~ cdc$smoke100, main="BMI by Smoked", 
+        ylab = "BMI", xlab="Smoked")
+boxplot(bmi ~ cdc$smoke100, main="BMI by Smoked", 
+        ylab = "BMI", xlab="Smoked",
+        outline = FALSE)
+summary(cdc$bmi[cdc$smoke100 == 1])
+summary(cdc$bmi[cdc$smoke100 == 0])
+```
+
+Hypothesis: Respondent that are male will have lower BMI on average compared to those that do not.  This figure seems to suggest that gender is a significant factor.
+
+```{r}
+# IQR range is larger in female. Male shows higher median BMI
+boxplot(bmi ~ cdc$gender, main="BMI by Gender", 
+        ylab = "BMI", xlab="Gender")
+boxplot(bmi ~ cdc$gender, main="BMI by Gender", 
+        ylab = "BMI", xlab="Gender",
+        outline = FALSE)
+summary(cdc$bmi[cdc$gender == "m"])
+summary(cdc$bmi[cdc$gender == "f"])
+```
+
+The second histogram appears to be a better graph to analyze for distribution.  Histograms are generally a very good way to see the shape of a single distribution, but the shape can change depending on how the data is split between the various bins. The first plot makes a default histogram of bmi and the second plot contains 50 breaks.
+
+```{r}
+# histogram for the age of respondents
+hist(cdc$age, main = "Histogram for Age", xlab = "Age",
+     sub="Data Source: CDC BRFSS")
+```
+```{r}
+# histogram for the bmi ofrespondents
+hist(bmi, main = "Histogram for BMI", xlab = "BMI", 
+     sub="Data Source: CDC BRFSS")
+# histogram for the bmi ofrespondents with 50 breaks
+hist(bmi, breaks = 50, main = "Histogram for BMI", xlab = "BMI", 
+     sub="Data Source: CDC BRFSS")
+```

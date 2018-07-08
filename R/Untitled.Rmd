@@ -1,0 +1,108 @@
+---
+title: "Assignment 0"
+author: "Marjorie Blanco"
+date: "7/2/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(plyr)
+library(ggplot2)
+```
+
+```{r, echo=FALSE}
+# Read data source
+source("http://www.openintro.org/stat/data/arbuthnot.R")
+```
+
+```{r}
+# View data
+arbuthnot
+
+# View dimension
+dim(arbuthnot)
+
+# View names of these columns (or variables)
+names(arbuthnot)
+
+# View single column of a data
+arbuthnot$boys
+```
+
+- Exercise 1: What command would you use to extract just the counts of girls baptized?
+
+There are `r dim(arbuthnot)[1]` records for girls baptized in the data set.
+
+```{r}
+length(arbuthnot$girls)
+
+dim(arbuthnot)[1]
+```
+- Exercise 2: Is there an apparent trend in the number of girls baptized over the years?
+How would you describe it?
+
+The is steady increase
+
+```{r}
+plot(x = arbuthnot$year, y = arbuthnot$girls, main="Number of girls baptized per year",
+    xlab="Year", ylab="Number of girls baptized") 
+
+plot(x = arbuthnot$year, y = arbuthnot$girls, type="l", main="Number of girls baptized per year",
+    xlab="Year", ylab="Number of girls baptized")
+
+ggplot(data = arbuthnot, aes(year,girls)) +
+  geom_line()
+```
+
+```{r}
+arbuthnot$boys + arbuthnot$girls
+
+plot(x = arbuthnot$year, y = arbuthnot$boys + arbuthnot$girls, type="l", type="l", main="Number of girls and boys baptized per year",
+    xlab="Year", ylab="Number of girls and boys baptized")
+
+arbuthnot$boys / arbuthnot$girls
+
+arbuthnot$boys / (arbuthnot$boys + arbuthnot$girls)
+
+arbuthnot$boys > arbuthnot$girls
+```
+
+- Exercise 3: Now, make a plot of the proportion of boys over time. What do you see?
+
+```{r}
+plot(x = arbuthnot$year, y = arbuthnot$boys / (arbuthnot$boys + arbuthnot$girls), type="l", main="Proportion of boys baptized per year",
+    xlab="Year", ylab="Proportion of boys baptized")
+```
+
+```{r, echo=FALSE}
+# Read data source
+source("http://www.openintro.org/stat/data/present.R")
+```
+
+
+
+1. What years are included in this data set? What are the dimensions of the data frame and what are the variable or column names?
+
+There are a total of years included in this data set.  The dimensions are.  And the variable names are: `r names(present)`
+
+```{r}
+count(present$year)
+```
+2. How do these counts compare to Arbuthnot’s? Are they on a similar scale?
+3. Make a plot that displays the boy-to-girl ratio for every year in the data set. What do
+you see? Does Arbuthnot’s observation about boys being born in greater proportion
+than girls hold up in the U.S.? Include the plot in your response.
+4. In what year did we see the most total number of births in the U.S.? You can refer to the
+help files or the R reference card http://cran.r-project.org/doc/contrib/Short- refcard.pdf to find helpful commands.
+
+In `r present[which.max(present[,"total"]), "year"]` the most total number of births in the U.S. The total was `r present[which.max(present[,"total"]), "total"]
+
+```{r}
+present$total <- present$boys + present$girls
+which.max( present[,"total"] )
+```
+
+```{r}
+plot(x = present$year, y = present$boys + present$girls, type="l")
+```

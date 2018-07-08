@@ -1,0 +1,126 @@
+---
+title: "DA 460 - Assignment 1"
+author: "Marjorie Blanco"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+# Part 1 R
+
+Based on Handout 1 R (use the same source data), apply R to answer the following questions. Make sure you include the command line/code, then paste relevant output/results, and also comment on the output/results as needed (to answer the questions).
+
+## Problem 1
+
+Make a scatterplot of weight versus desired weight. Describe the relationship between these two variables.
+
+```{r, echo=FALSE}
+# Load BRFSS data
+source("http://www.openintro.org/stat/data/cdc.R")
+```
+
+The following is a scatterplot shows respondent's desired weight against weight. There appears to be positive association/relationship between desired weight and weight.  Intuition suggests that respondent's desired weight will be lower than their weight.
+
+```{r}
+plot(cdc$wtdesire, cdc$weight, main="Desired Weight vs. Weight", 
+     ylab = "Weight", xlab="Desired Weight",
+     sub="Data Source: CDC BRFSS")
+
+library(ggplot2)
+ggplot(cdc, aes(cdc$wtdesire, cdc$weight)) + 
+  geom_point(aes(color = gender))
+```
+
+## Problem 2
+
+Let's consider a new variable: the difference between desired weight (wtdesire) and current weight (weight). Create this new variable by subtracting the two columns in the data frame and assigning them to a new object called wdiff.
+
+```{r}
+# the difference between desired weight (wtdesire) and current weight (weight)
+cdc$wtdiff <- cdc$wtdesire - cdc$weight
+```
+
+## Problem 3
+
+What type of data is wdiff? If an observation wdiff is 0, what does this mean about the person's weight and desired weight. What if wdiff is positive or negative?
+
+```{r}
+class(cdc$wtdiff)
+```
+
+The data type for wdiff is discrete numerical.  If an observation wdiff is 0, the person's current weight and the desired weight are the same.  The person has reached their desired weight goal  If wdiff is positive, the person's desired weight is more than the current weight.  The person must gain weight to reach their desired goal.  If wdiff is negative, the person's desired weight is less than the current weight.  The person must lose weight to reach their desired goal.
+
+## Problem 4
+
+Describe the distribution of wdiff in terms of its center, shape, and spread, including any plots you use. What does this tell us about how people feel about their current weight?
+
+```{r}
+summary(cdc$wtdiff)
+hist(cdc$wtdiff, breaks=100, main="Histogram of Weight Diff", 
+     xlab = "Weight Diff")
+# boxplot 
+boxplot(cdc$wtdif ~ cdc$gender, main="Boxplot of Weight Diff", 
+     ylab = "Weight Diff", xlab = "Gender")
+# boxplot (outliers removed)
+boxplot(cdc$wtdif ~ cdc$gender, outline = F, main="Boxplot of Weight Diff", 
+     ylab = "Weight Diff", xlab = "Gender")
+```
+
+The summary statistics show that, on average, the person desired to lose approximately `r abs(summary(cdc$wtdiff)["Mean"])` pounds. The histogram mostly left skewed shows higher tendency for subjects to desire losing weight than gaining it. The first boxplot including outliers shows that the average person was slightly more likely to desired to lose weight than gain to reach their goal.  The second boxplot (removed outliers shows that the average person is far more likely to desire to lose weight than gain some to reach their goal.  This is supported by both the IQ range and the lower mean.
+
+## Problem 5
+
+Using numerical summaries and a side-by-side box plot, determine if men tend to view their weight differently than women.
+
+```{r}
+diff_fem = subset(cdc$wtdiff, cdc$gender == "f")
+diff_male = subset(cdc$wtdiff, cdc$gender == "m")
+summary(diff_fem)
+summary(diff_male)
+
+
+# boxplot (outliers removed)
+boxplot(cdc$wtdif ~ cdc$gender, outline = F, main="Boxplot of Weight Diff", 
+     ylab = "Weight Diff", xlab = "Gender")
+```
+
+The plot shows that women desire to lose weight more than men.  Women have a larger wdiff than men, which could potentially mean that women may feel more strongly about their weight goals or even set more difficult-to-achieve goals than men. <TBD>
+
+## Problem 6
+
+Now it's time to get creative. Find the mean and standard deviation of weight and determine what proportion of the weights are within one standard deviation of the mean.
+
+```{r}
+meanWeight <- mean(cdc$weight)
+sdWeight <- sd(cdc$weight)
+lower <- meanWeight - sdWeight
+upper <- meanWeight + sdWeight
+cdc$one_sd <- cdc$weight > lower & cdc$weight < upper
+
+table(cdc$one_sd)
+
+# relative frequency distribution
+table(cdc$one_sd) / length(cdc$one_sd)
+```
+
+- Weight Mean: `r mean(cdc$weight)`
+- Weight Standard Deviation: `r sd(cdc$weight)`
+- Weight Lower: `r lower`
+- Weight Upper: `r upper`
+
+Approximately `r (table(cdc$one_sd)/ length(cdc$one_sd))["TRUE"]*100`% of person's weight was withing one standard deviation of the mean (`r mean(cdc$weight)`).
+
+```{r}
+ggplot(cdc, aes(cdc$weight)) + 
+  geom_histogram(bins = 75) +
+  geom_vline(xintercept = mean(cdc$weight), col="red") +
+  geom_vline(xintercept = lower, col="blue") +
+  geom_vline(xintercept = upper, col="blue") +
+  ylab("Frequenxy") +
+  xlab("Weight") +
+  ggtitle("Histogram of Weight")
+```

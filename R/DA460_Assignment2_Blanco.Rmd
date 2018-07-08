@@ -1,0 +1,96 @@
+---
+title: "DA 460 - Assignment 2"
+author: "Marjorie Blanco"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(1)
+```
+
+# Part 1 R
+
+Based on Handout 2 R, apply R to compare Kobe Bryant to the simulated independent shooter. Using calc_streak, to compute the streak lengths of sim_basket, and then answer the following questions. Make sure you include clear headings (e.g., Handout 2 R or Handout 2 SAS). For each part of the question, make sure you include the command line/code, then paste relevant output/results, and also comment on the output/results as needed (to answer the questions).
+
+```{r, results='hide', echo=FALSE}
+# load data
+download.file("http://www.openintro.org/stat/data/kobe.RData", destfile = "kobe.RData")
+load("kobe.RData")
+kobe_streak <- calc_streak(kobe$basket)
+```
+
+## Problem 1
+
+Describe the distribution of streak lengths. What is the typical streak length for this simulated independent shooter with a 45% shooting percentage? How long is the player's longest streak of baskets in 133 shots?
+
+```{r, results='hide'}
+# possible outcome H: hit M: missed
+outcomes <- c("H", "M")
+# number of simulated shots
+sampleSize = 133
+# shooting percentage
+shooting = 0.45
+```
+
+```{r}
+# run simulation
+sim_basket <- sample(outcomes, size = sampleSize, replace = TRUE, prob = c(shooting, 1 - shooting))
+# view the results of this simulation
+table(sim_basket)
+# calculate the lengths of all shooting streaks
+sim_streak <- calc_streak(sim_basket)
+# streak distribution
+barplot(table(sim_streak), main = "Basket Streaks by Simulated Independent Shooter with a 45% shooting percentage (133 attempts)",
+        sub = "First Simulation", xlab = "Streak Length", ylab = "Frequency", cex.main=0.5)
+```
+
+The distribution of simulated independent shooter with a 45% shooting percentage is strongly skewed to the right.  The typical streak length is `r min(sim_streak)` and the longest streak of baskets is `r max(sim_streak)`.
+
+## Problem 2
+
+If you were to run the simulation of the independent shooter a second time, how would you expect its streak distribution to compare to the distribution from the question above? Exactly the same? Somewhat similar? Totally different? Explain your reasoning.
+
+The expectation is for the streak distribution for the second simulation to be the somewhat similar to the distribution from the first simulation. The simulation generates random outcome that adhere to the specified probabilities; therefore the probabilities will be the same, but not necessarily the outcome will be the same.
+
+```{r}
+# run simulation
+sim_basket <- sample(outcomes, size = sampleSize, replace = TRUE, prob = c(shooting, 1 - shooting))
+# view the results of this simulation
+table(sim_basket)
+# calculate the lengths of all shooting streaks
+sim_streak <- calc_streak(sim_basket)
+# streak distribution
+barplot(table(sim_streak), main = "Basket Streaks by Simulated Independent Shooter with a 45% shooting percentage (133 attempts)",
+        sub = "Second Simulation", xlab = "Streak Length", ylab = "Frequency", cex.main=0.5)
+```
+
+The distribution of simulated independent shooter with a 45% shooting percentage is strongly skewed to the right.  The typical streak length is `r min(sim_streak)` and the longest streak of baskets is `r max(sim_streak)`.
+
+## Problem 3
+
+How does Kobe Bryant's distribution of streak lengths compare to the distribution of streak lengths for the simulated shooter? Using this comparison, do you have evidence that the hot hand model fits Kobe's shooting patterns? Explain.
+
+```{r}
+barplot(table(kobe_streak), main = "Basket Streaks by Kobe Bryant in 2009 (133 attempts)",
+        xlab = "Streak Length", ylab = "Frequency", cex.main=0.5)
+barplot(table(sim_streak), main = "Basket Streaks by Simulated Independent Shooter with a 45% shooting percentage (133 attempts)",
+        xlab = "Streak Length", ylab = "Frequency", cex.main=0.5)
+```
+
+If Kobe's shooting streaks diverge significantly from an independent shooter's streaks, we can conclude that Kobe likely has a hot hand.  Kobe Bryant's distribution of streak lengths is very similar to the distribution of streak lengths for the simulated shooter.  The distributions do share similar characteristics such as skewness.
+
+Since Kobe's streak length distribution looks very similar to the independent shooter's simulated steak length distribution, the conclusion is that Kobe Bryant does not have a "hot hand".
+
+
+In R the geometric distribution is the number of failures before a success, not the number of trials including the success. 
+ So if we want to find the probability that the first hit is on the fourth toss, then the number of failure will be 3. Then from the previous example, the probability of tossing a head is 0.45.
+#The arguments to geom are geom(# of failures,p).
+dgeom(0,.45)
+dgeom(1,.45)
+dgeom(2,.45)
+dgeom(3,.45)
+

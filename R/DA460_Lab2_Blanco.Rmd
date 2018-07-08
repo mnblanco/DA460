@@ -1,0 +1,115 @@
+---
+title: "DA 460 - Lab 2"
+author: "Marjorie Blanco"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Handout 2 R: Probability
+
+## Getting Started
+
+```{r}
+# load data
+download.file("http://www.openintro.org/stat/data/kobe.RData", destfile = "kobe.RData")
+load("kobe.RData")
+# view first records
+head(kobe)
+# sequence of hits and misses from Kobe's nine shot attempts in the first quarter
+kobe$basket[1:9]
+```
+
+### Exercise 1
+
+What does a streak length of 1 mean, i.e. how many hits and misses are in a streak of 1? What about a streak length of 0?
+
+"H" "M" | "M" | "H" "H" "M" |"M" | "M" | "M"
+
+A streak length of 1 has a hit followed by a miss.  A streak length of 0 has a miss.  In the example, the first is streak length of 1 followed by streak length of 0.
+
+```{r}
+# calculate the lengths of all shooting streaks
+kobe_streak <- calc_streak(kobe$basket)
+# streak distribution
+barplot(table(kobe_streak), main="Kobe's Streak", 
+     ylab = "Frequency", xlab = "Length")
+```
+
+### Exercise 2
+
+Describe the distribution of Kobe's streak lengths from the 2009 NBA finals. What was his typical streak length? How long was his longest streak of baskets?
+
+The distribution of Kobe's streak lengths from the 2009 NBA finals is strongly skewed to the right.  The typical streak length is 0.  Kobe's longest streak of baskets is 4.
+
+## Simulations in R
+
+```{r}
+# possible outcome
+outcomes <- c("heads", "tails")
+# random sample of size 1
+sample(outcomes, size = 1, replace = TRUE)
+# simulate flipping a fair coin 100 times
+sim_fair_coin <- sample(outcomes, size = 100, replace = TRUE)
+
+# view the results of this simulation
+sim_fair_coin
+table(sim_fair_coin)
+
+# simulate an unfair coin that we know only lands heads 20% of the time
+sim_unfair_coin <- sample(outcomes, size = 100, replace = TRUE, prob = c(0.2, 0.8))
+
+# view the results of this simulation
+sim_unfair_coin
+table(sim_unfair_coin)
+```
+
+### Exercise 3
+
+In your simulation of flipping the unfair coin 100 times, how many flips came up heads?
+
+In the simulation of flipping the unfair coin 100 times, `r table(sim_unfair_coin)["heads"]` flips came up heads.  This is consistent with the probality of 20% that a coin would land on heads.
+
+## Simulating the Independent Shooter
+
+```{r}
+# possible outcome H: hit M: missed
+outcomes <- c("H", "M")
+# random sample of size 1
+sim_basket <- sample(outcomes, size = 1, replace = TRUE)
+```
+
+### Exercise 4
+
+What change needs to be made to the sample function so that it reflects a shooting percentage of 45%? Make this adjustment, then run a simulation to sample 133 shots. Assign the output of this simulation to a new object called sim_basket.
+
+```{r}
+sampleSize = 133
+shooting = 0.45
+sim_basket <- sample(outcomes, size = 133, replace = TRUE, prob = c(shooting, 1 - shooting))
+table(sim_basket)
+
+# kobe's shots
+kobe$basket
+#simulated shooter does not have a hot hand
+sim_basket
+```
+
+```{r}
+# calculate the lengths of all shooting streaks
+sim_streak <- calc_streak(sim_basket)
+# streak distribution
+barplot(table(sim_streak), main="Simulated Streak", 
+     ylab = "Frequency", xlab = "Length")
+```
+
+
+Suppose there are twelve multiple choice questions in an English class quiz. Each question has five possible answers, and only one of them is correct. Find the probability of having four or less correct answers if a student attempts to answer every question at random.
+
+Solution
+Since only one out of five possible answers is correct, the probability of answering a question correctly by random is 1/5=0.2. We can find the probability of having exactly 4 correct answers by random attempts as follows.

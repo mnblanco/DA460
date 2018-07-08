@@ -1,0 +1,308 @@
+---
+title: "DA 460 - Assignment 0"
+author: "Marjorie Blanco"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+```
+
+# Part 1 R
+
+## The Data: Dr. Arbuthnot's Baptism Records
+
+```{r, echo=FALSE}
+# Read data source
+source("http://www.openintro.org/stat/data/arbuthnot.R")
+```
+
+```{r, results='hide'}
+# View data
+arbuthnot
+```
+
+```{r}
+# View dimension
+dim(arbuthnot)
+
+# View names of these columns (or variables)
+names(arbuthnot)
+```
+
+## Some Exploration
+
+```{r}
+# View single column of a data
+arbuthnot$boys
+arbuthnot$girls
+```
+
+## Problem 1
+
+What command would you use to extract just the counts of girls baptized?
+
+There are `r length(arbuthnot$girls)` records for girls baptized in the `arbuthnot` data set.  The total count of girls baptized is `r sum(arbuthnot$girls)`.
+
+```{r}
+# extract just the counts of girls baptized
+arbuthnot$girls
+
+#total number of girls baptized
+sum(arbuthnot$girls)
+
+# records of girls baptized
+length(arbuthnot$girls)
+dim(arbuthnot)[1]
+```
+
+## Problem 2
+
+Is there an apparent trend in the number of girls baptized over the years?  How would you describe it?
+
+There is an apparent trend in the number of girls baptized over the years.  There is steady increase of girls baptized starting in 1660. The trend can be described as polynomial. 
+
+```{r}
+# summary stats
+summary(arbuthnot$girls)
+summary(arbuthnot$boys)
+# observation with max girls births
+arbuthnot[arbuthnot$girls==max(arbuthnot$girls), ]
+# observation with min girls births
+arbuthnot[arbuthnot$girls==min(arbuthnot$girls), ]
+```
+
+```{r, warning=FALSE}
+# create a simple plot of the number of girls baptized per year
+plot(x = arbuthnot$year, y = arbuthnot$girls, 
+     main="Number of girls baptized per year",
+     xlab="Year", ylab="Number of girls baptized", sub="Data Source: Dr. Arbuthnot's Baptism Records") 
+abline(lm(arbuthnot$girls ~ arbuthnot$year), col='red')
+
+# create a simple line plot of the number of girls baptized per year
+plot(x = arbuthnot$year, y = arbuthnot$girls, type="l", 
+     main="Number of girls baptized per year",
+     xlab="Year", ylab="Number of girls baptized", sub="Data Source: Dr. Arbuthnot's Baptism Records")
+
+arbplot = data.frame(arbuthnot$year, arbuthnot$girls)
+ggplot(arbplot, aes(arbuthnot$year,arbuthnot$girls)) + 
+  geom_point() + 
+  geom_smooth() +
+  ggtitle("Number of girls baptized per year") +
+  xlab("Year") + ylab("Number of girls baptized")
+```
+
+```{r}
+# mathematical expressions
+arbuthnot$boys + arbuthnot$girls
+
+# Plot of the total number of baptisms per year
+arbuthnot$total = arbuthnot$boys + arbuthnot$girls
+plot(x = arbuthnot$year, y = arbuthnot$total, type="l", 
+     main="Number of girls and boys baptized per year",
+     xlab="Year", ylab="Number of girls and boys baptized", sub="Data Source: Dr. Arbuthnot's Baptism Records")
+
+# compute the ratio of the number of boys to the number of girls baptized in 1629 (expression)
+arbuthnot$boys / arbuthnot$girls
+
+# computed for all years simultaneously
+arbuthnot$boys / (arbuthnot$boys + arbuthnot$girls)
+
+# check if boys outnumber girls in each year with
+arbuthnot$boys > arbuthnot$girls
+```
+
+## Problem  3
+
+Now, make a plot of the proportion of boys over time. What do you see?
+
+The proportion of boys that are baptised over time is betweeen `r round(min(arbuthnot$boys / (arbuthnot$boys + arbuthnot$girls)) * 100, 2)`% and `r round(max(arbuthnot$boys / (arbuthnot$boys + arbuthnot$girls)) * 100, 2)`%.  This is a time-series plot.
+
+
+```{r}
+plot(x = arbuthnot$year, y = arbuthnot$boys / (arbuthnot$boys + arbuthnot$girls), type="l", 
+     main="Proportion of boys baptized per year",
+     xlab="Year", ylab="Proportion of boys baptized", sub="Data Source: Dr. Arbuthnot's Baptism Records")
+abline(lm((arbuthnot$boys/(arbuthnot$boys + arbuthnot$girls)) ~ arbuthnot$year), col='blue')
+```
+
+# Part 2 R
+
+## The Data: Present Baptism Records
+
+```{r, echo=FALSE}
+# Read data source
+source("http://www.openintro.org/stat/data/present.R")
+```
+
+```{r, results='hide'}
+# View data
+present
+```
+
+```{r}
+# View dimension
+dim(present)
+
+# View names of these columns (or variables)
+names(present)
+```
+
+## Some Exploration
+
+```{r}
+# View single column of a data
+present$boys
+present$girls
+```
+
+## Problem 1
+
+What command would you use to extract just the counts of girls baptized?
+
+There are `r length(present$girls)` records for girls baptized in the `present` data set.  The total count of girls baptized is `r sum(present$girls)`.
+
+```{r}
+# extract just the counts of girls baptized
+present$girls
+
+#total number of girls baptized
+sum(present$girls)
+
+# records of girls baptized
+length(present$girls)
+dim(present)[1]
+```
+
+## Problem 2
+
+Is there an apparent trend in the number of girls baptized over the years?  How would you describe it?
+
+There is an apparent trend in the number of girls baptized over the years.  There is steady increase of girls baptized from 1949 to 1969 and from 1970 to 2002. The trend can be described as polynomial. 
+
+```{r}
+# summary stats
+summary(present$girls)
+summary(present$boys)
+# observation with max girls births
+arbuthnot[present$girls==max(arbuthnot$girls), ]
+# observation with min girls births
+arbuthnot[present$girls==min(arbuthnot$girls), ]
+```
+
+```{r}
+# create a simple plot of the number of girls baptized per year
+plot(x = present$year, y = present$girls, 
+     main="Number of girls baptized per year",
+     xlab="Year", ylab="Number of girls baptized") 
+abline(lm(present$girls ~ present$year), col='red', sub="Data Source: Present Baptism Records")
+
+# create a simple line plot of the number of girls baptized per year
+plot(x = present$year, y = present$girls, type="l", 
+     main="Number of girls baptized per year",
+     xlab="Year", ylab="Number of girls baptized", sub="Data Source: Present Baptism Records")
+
+arbplot = data.frame(present$year, present$girls)
+ggplot(arbplot, aes(present$year, present$girls)) + 
+  geom_point() + 
+  geom_smooth() +
+  ggtitle("Number of girls baptized per year") +
+  xlab("Year") + ylab("Number of girls baptized")
+```
+
+```{r}
+# mathematical expressions
+present$boys + present$girls
+
+# Plot of the total number of baptisms per year
+present$total = present$boys + present$girls
+plot(x = present$year, y = present$total, type="l", 
+     main="Number of girls and boys baptized per year",
+     xlab="Year", ylab="Number of girls and boys baptized", sub="Data Source: Present Baptism Records")
+
+# compute the ratio of the number of boys to the number of girls baptized in 1629 (expression)
+present$boys / present$girls
+
+# computed for all years simultaneously
+present$boys / (present$boys + present$girls)
+
+# check if boys outnumber girls in each year with
+present$boys > present$girls
+```
+
+## Problem  3
+
+Now, make a plot of the proportion of boys over time. What do you see?
+
+The proportion of boys that are baptised over time is betweeen `r round(min(present$boys / (present$boys + present$girls)) * 100, 2)`% and `r round(max(present$boys / (present$boys + present$girls)) * 100, 2)`%.  This is a time-series plot.
+
+```{r}
+plot(x = present$year, y = present$boys / (present$boys + present$girls), type="l", 
+     main="Proportion of boys baptized per year",
+     xlab="Year", ylab="Proportion of boys baptized", sub="Data Source: Present Baptism Records")
+abline(lm((present$boys/(present$boys + present$girls)) ~ present$year), col='blue')
+```
+
+# Part 3
+
+## Problem 1
+
+What years are included in this data set? What are the dimensions of the data frame and what are the variable or column names?
+
+There are a total of `r length(present$year)` years included in this `present` data set.  The dimensions of the data frame is `r dim(present)`.  There are `r dim(present)[1]` records and `r dim(present)[2]` variables.  The variable names are: `r names(present)`.  The year range for the present data set is from `r min(present$year)` to `r max(present$year)`.  The year range for the present data set is from `r min(present$year)` to `r max(present$year)`.
+
+```{r}
+dim(present)
+names(present)
+```
+
+## Problem  2
+
+How do these counts compare to Arbuthnot's? Are they on a similar scale?
+
+The counts are different for Arbuthnot and Present data set.  The scale (year) are different for both data set.
+
+## Problem 3
+
+Make a plot that displays the boy-to-girl ratio for every year in the data set. What do you see? Does Arbuthnot's observation about boys being born in greater proportion than girls hold up in the U.S.? Include the plot in your response.
+
+There is a steady decrease of boy-to-girl ratio. Arbuthnot's observation about boys being born in greater proportion than girls in the U.S. seems to hold for the mid 1940s, however even that proportion of (at its highest `r round(max(present$boys / present$girls), 2)`) isn't particularly high and overall it decreases as the years pass.
+
+```{r}
+plot(x = present$year, y = present$boys / present$girls, type="l", 
+     main="Boy-to-Girl baptized ratio per year",
+     xlab="Year", ylab="Boy-to-Girl baptized ratio", sub="Data Source: Present Baptism Records")
+```
+
+## Problem 4
+
+In what year did we see the most total number of births in the U.S.? You can refer to the
+help files or the R reference card http://cran.r-project.org/doc/contrib/Short- refcard.pdf to find helpful commands.
+
+```{r}
+# calculate total baptisms per year
+present$total <- present$boys + present$girls
+present[which.max( present[,"total"]), "year"]
+```
+
+In `r present[which.max(present[,"total"]), "year"]` the most total number of births in the U.S. The total was `r present[which.max(present[,"total"]), "total"]/1000` thousand.
+
+```{r, results='hide'}
+year <- present[which.max(present[,"total"]), "year"]
+total <- present[which.max(present[,"total"]), "total"]
+```
+
+```{r}
+# Plot of the total number of baptisms per year
+plot(x = present$year, y = present$total, type="l", 
+     main="Number of girls and boys baptized per year",
+     xlab="Year", ylab="Number of girls and boys baptized", sub="Data Source: Present Baptism Records")
+text(year, total, present[which.max(present[,"total"]), "total"],  pos=4)
+points(year, total, pch = 19)
+```

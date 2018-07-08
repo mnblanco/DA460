@@ -1,0 +1,102 @@
+---
+title: "DA 460 - Lab 6"
+author: "Marjorie Blanco"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Handout 6 R: Inference for numerical data
+
+### Exploratory analysis
+
+Numerical
+- fage: father's age in years
+- mage: mother's age in years
+- weeks: length of pregnancy in weeks
+- visits: number of hospital visits during pregnancy
+- gained: weight gained by mother during pregnancy in pounds
+- weight: weight of the baby at birth in pounds
+
+
+Categorical
+- mature maturity status of mother. 
+- premie: whether the birth was classified as premature (premie) or full-term
+- marital whether mother is married or not married at birth
+- lowbirthweight: whether baby was classified as low birthweight (low) or not (not low)
+- gender: gender of the baby, female or male
+- habit: status of the mother as a nonsmoker or a smoker
+- whitemom: whether mom is white or not white
+
+```{r}
+# Load the nc data set into our workspace.
+download.file("http://www.openintro.org/stat/data/nc.RData", destfile = "nc.RData")
+load("nc.RData")
+```
+
+### Exercise 1
+
+What are the cases in this data set? How many cases are there in our sample?
+
+Each row is record that contains information for each recorded birth in 2004 in the state of North Carolina. Add code for columns and row.
+
+```{r}
+# summaries of the data
+summary(nc)
+```
+
+As you review the variable summaries, consider which variables are categorical and which are numerical. For numerical variables, are there outliers?
+
+```{r}
+boxplot(nc$fage, main="Boxplot of father's Age", ylab="Age")
+boxplot(nc$mage, main="Boxplot of Mother's Age", ylab="Age")
+boxplot(nc$weeks, main="Boxplot of length of pregnancy (weeks)", ylab="Weeks")
+boxplot(nc$visits, main="Boxplot of number of hospital visit during pregnancy", ylab="Hospital Visits")
+boxplot(nc$gained, main="Boxplot of weight gained by mother during pregnancy (lbs)", ylab="Weight")
+boxplot(nc$weight, main="Boxplot of weight of baby at birth (lbs)", ylab="Weight")
+```
+
+### Exercise 2
+
+Make a side-by-side boxplot of habit and weight. What does the plot highlight about the relationship between these two variables?
+
+```{r}
+by(nc$weight, nc$habit, mean)
+```
+
+## Inference
+
+### Exercise 3
+
+Check if the conditions necessary for inference are satisfied. Note that you will need to obtain sample sizes to check the conditions. You can compute the group size using the same by command above but replacing mean with length.
+
+### Exercise 4
+
+Write the hypotheses for testing if the average weights of babies born to smoking and non-smoking mothers are different.
+
+H0: mu_nonsmoker - mu_smoker = 0 
+
+HA: mu_nonsmoker - mu_smoker != 0 
+
+```{r}
+# inference is use for conducting hypothesis tests and constructing confidence intervals
+inference(y = nc$weight, x = nc$habit, est = "mean", type = "ht", null = 0, 
+          alternative = "twosided", method = "theoretical")
+```
+
+### Exercise 5
+
+Change the type argument to "ci" to construct and record a confidence interval for the difference between the weights of babies born to smoking and non-smoking mothers.
+
+
+```{r}
+inference(y = nc$weight, x = nc$habit, est = "mean", type = "ci", null = 0, 
+          alternative = "twosided", method = "theoretical", 
+          order = c("smoker","nonsmoker"))
+```
+
+
+
