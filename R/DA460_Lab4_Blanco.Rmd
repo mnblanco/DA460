@@ -2,7 +2,9 @@
 title: "DA 460 - Lab 4"
 author: "Marjorie Blanco"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output:
+  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -17,8 +19,8 @@ knitr::opts_chunk$set(echo = TRUE)
 # load data
 download.file("http://www.openintro.org/stat/data/ames.RData", destfile = "ames.RData")
 load("ames.RData")
+set.seed(1)
 ```
-
 
 ```{r}
 # the above ground living area of the house in square feet
@@ -29,48 +31,119 @@ price <- ames$SalePrice
 # summary statistics for area
 summary(area)
 # histogram for area
-hist(area)
+hist(area, prob=TRUE)
+curve(dnorm(x, mean=mean(area), sd=sd(area)), add=TRUE)
 
+hist(area, breaks = 20, prob=TRUE)
+curve(dnorm(x, mean=mean(area), sd=sd(area)), add=TRUE)
+
+# plot area
+plot(area)
+
+# calculate mean, standard deviation, median, and mode for area
+areamean <- mean(area)
+areasd   <- sd(area)
+areamedian <- median(area)
+freq <- tapply(area,area,length)
+areamode <- as.numeric(names(freq)[which.max(freq)])
 ```
 
 ### Exercise 1
 
 Describe this population distribution.
 
+The population for area is highly right-skew and unimodal. The mean is `r round(areamean, 3)`, median is `r areamedian`, and the range is `r min(area)` to `r max(area)`.
+
+The data follow does not follow a normal distribution.
+
+- Mean: `r round(areamean, 3)`
+
+- Median: `r areamedian`
+
+- Mode: `r areamode`
+
+- SD: `r round(areasd, 3)`
+
 
 ## The unknown sampling distribution
+
+
 
 ```{r}
 # simple random sample of size 50
 samp1 <- sample(area, 50)
+
+# summary statistics for area
+summary(samp1)
+# histogram for area
+hist(samp1, prob=TRUE)
+curve(dnorm(x, mean=mean(samp1), sd=sd(samp1)), add=TRUE)
+
+hist(samp1, breaks = 20, prob=TRUE)
+curve(dnorm(x, mean=mean(samp1), sd=sd(samp1)), add=TRUE)
+
+# estimate the average living area in homes in Ames using sample mean
+mean(samp1)
 ```
 
 ### Exercise 2
 
 Describe the distribution of this sample. How does it compare to the distribution of the population?
+The sample is slightly right-skew and unimodal. The sample distribution is less skewed that the distribution of the population.
 
-```{r}
-# estimate the average living area in homes in Ames
-mean(samp1)
-```
+The data follow does not follow a normal distribution.
+
+- Mean: `r round(mean(samp1), 3)`
+
+- Median: `r median(samp1)`
+
+- SD: `r round(sd(samp1), 3)`
 
 ### Exercise 3 
 
 Take a second sample, also of size 50, and call it samp2. How does the mean of samp2 compare with the mean of samp1? Suppose we took two more samples, one of size 100 and one of size 1000. Which would you think would provide a more accurate estimate of the population mean?
 
 ```{r}
-# simple random sample of size 50
-samp2 <- sample(area, 50)
+# simple random sample of size 50 (named samp50 instead of samp2)
+samp50 <- sample(area, 50)
 # simple random sample of size 100
 samp100 <- sample(area, 100)
 # simple random sample of size 1000
 samp1000 <- sample(area, 1000)
 
-
-mean(samp2)
+# mean for samp2, samp100 and samp1000
+mean(samp50)
 mean(samp100)
 mean(samp1000)
+
+# summary statistics for samp50
+summary(samp50)
+# histogram for samp50
+hist(samp50, prob=TRUE, breaks = 10)
+curve(dnorm(x, mean=mean(samp50), sd=sd(samp50)), add=TRUE)
+
+
+# summary statistics for samp100
+summary(samp100)
+# histogram for samp100
+hist(samp100, prob=TRUE, breaks = 10)
+curve(dnorm(x, mean=mean(samp100), sd=sd(samp100)), add=TRUE)
+
+# summary statistics for samp1000
+summary(samp1000)
+# histogram for samp1000
+hist(samp1000, prob=TRUE, breaks = 10)
+curve(dnorm(x, mean=mean(samp1000), sd=sd(samp1000)), add=TRUE)
 ```
+
+The mean of samp1 is `r mean(samp1)` while the mean of sample2 is `r mean(samp50)`.
+I would expect the mean of samp1000 (n=1000) to be closest to the area population mean.  The mean for area is `r mean(area)` while the mean for samp1000 is `r mean(samp1000)`.  As the sample size increase, the mean of the sample, approaches the population mean.
+
+- area: `r round(mean(area), 3)`
+- samp1: `r round(mean(samp1), 3)`
+- samp50 (samp2): `r round(mean(samp50), 3)`
+- samp100: `r round(mean(samp100), 3)`
+- samp1000: `r round(mean(samp1000), 3)`
 
 ```{r}
 # create vector to save mean for 5000 samples of size 50
@@ -83,16 +156,20 @@ for(i in 1:length(sample_means50)){
    sample_means50[i] <- mean(samp)
    }
 # histogram of mean for 5000 samples of size 50
-hist(sample_means50)
+hist(sample_means50, prob=TRUE)
 
 # adjust the bin width of  histogram to show more detail
-hist(sample_means50, breaks = 25)
+hist(sample_means50, breaks = 25, prob=TRUE)
+curve(dnorm(x, mean=mean(sample_means50), sd=sd(sample_means50)), add=TRUE)
+
+summary(sample_means50, prob=TRUE)
 ```
 
 ### Exercise 4
 
 How many elements are there in sample_means50? Describe the sampling distribution, and be sure to specifically note its center. Would you expect the distribution to change if we instead collected 50,000 sample means?
 
+There are `r length(sample_means50)` samples of means in sample_means50. The summary results provide the mean and median values. These values will closely reflect the original mean of the population. This is nearly normal distribution. As samples increase, the distribution will have increased normality.
 
 ## Interlude: The for loop
 
@@ -119,6 +196,7 @@ for(i in 1:5000){
    sample_means50[i] <- mean(samp)
    #print(i)
 }
+head(sample_means50)
 ```
    
 ### Exercise 5
@@ -126,40 +204,64 @@ for(i in 1:5000){
 To make sure you understand what you've done in this loop, try running a smaller version. Initialize a vector of 100 zeros called sample_means_small. Run a loop that takes a sample of size 50 from area and stores the sample mean in sample_means_small, but only iterate from 1 to 100. Print the output to your screen (type sample_means_small into the console and press enter). How many elements are there in this object called sample_means_small? What does each element represent?
 
 ```{r}
+# create vector to save mean for 100 samples of size 50
 sample_means_small <- rep(NA, 100)
 
 for(i in 1:length(sample_means_small)){
+   # simple random sample of size 50
    samp <- sample(area, 50)
+   # save sample
    sample_means_small[i] <- mean(samp)
 }
+sample_means_small
 ```
+
+There are `r length(sample_means_small)` elements in sample_means_small. Each value represent mean of random sample of 50 elements for area data.
 
 ## Sample size and the sampling distribution
 
 ```{r}
-hist(sample_means50)
+# histogram of mean for 100 samples of size 50
+hist(sample_means50, prob=TRUE)
+curve(dnorm(x, mean=mean(sample_means50), sd=sd(sample_means50)), add=TRUE)
 ```
 
 ```{r}
+# create vector to save mean for 5000 samples of size 10
 sample_means10 <- rep(NA, 5000)
+# create vector to save mean for 5000 samples of size 100
 sample_means100 <- rep(NA, 5000)
 
 for(i in 1:5000){
+  # simple random sample of size 10
   samp <- sample(area, 10)
   sample_means10[i] <- mean(samp)
+  # simple random sample of size 100
   samp <- sample(area, 100)
   sample_means100[i] <- mean(samp)
 }
+
 par(mfrow = c(3, 1))
 
 xlimits <- range(sample_means10)
 
-hist(sample_means10, breaks = 20, xlim = xlimits)
-hist(sample_means50, breaks = 20, xlim = xlimits)
-hist(sample_means100, breaks = 20, xlim = xlimits)
+hist(sample_means10, breaks = 20, xlim = xlimits, prob=TRUE)
+curve(dnorm(x, mean=mean(sample_means50), sd=sd(sample_means50)), add=TRUE)
+
+hist(sample_means50, breaks = 20, xlim = xlimits, prob=TRUE)
+curve(dnorm(x, mean=mean(sample_means50), sd=sd(sample_means50)), add=TRUE)
+
+hist(sample_means100, breaks = 20, xlim = xlimits, prob=TRUE)
+curve(dnorm(x, mean=mean(sample_means50), sd=sd(sample_means50)), add=TRUE)
+
 ```
 
 ### Exercise 6
 
 When the sample size is larger, what happens to the center? What about the spread?
 
+As the sample size of the calculated sample mean increases, the distribution range becomes narrower and the mean frequencies taller.
+
+- sample_means10  mean: `r mean(sample_means10)`   Interquartile range: `r min(sample_means10)` - `r max(sample_means10)`   range: `r max(sample_means10) - min(sample_means10)`
+- sample_means50  mean: `r mean(sample_means50)`   Interquartile range: `r min(sample_means50)` - `r max(sample_means50)`   range: `r max(sample_means50) - min(sample_means50)`
+- sample_means100 mean: `r mean(sample_means100)`  Interquartile range: `r min(sample_means100)` - `r max(sample_means100)` range: `r max(sample_means100) - min(sample_means100)`

@@ -107,9 +107,3 @@ sim_streak <- calc_streak(sim_basket)
 barplot(table(sim_streak), main="Simulated Streak", 
      ylab = "Frequency", xlab = "Length")
 ```
-
-
-Suppose there are twelve multiple choice questions in an English class quiz. Each question has five possible answers, and only one of them is correct. Find the probability of having four or less correct answers if a student attempts to answer every question at random.
-
-Solution
-Since only one out of five possible answers is correct, the probability of answering a question correctly by random is 1/5=0.2. We can find the probability of having exactly 4 correct answers by random attempts as follows.

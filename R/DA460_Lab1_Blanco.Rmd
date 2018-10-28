@@ -3,8 +3,8 @@ title: "DA 460 - Lab 1"
 author: "Marjorie Blanco"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output:
-  html_document: default
   word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -266,7 +266,7 @@ summary(cdc$bmi[cdc$genhlth == "poor"])
 
 What does this box plot show? Pick another categorical variable from the data set and see how it relates to BMI. List the variable you chose, why you might think it would have a relationship to BMI, and indicate what the figure seems to suggest.
 
-Hypothesis: Respondent that exercised in the past month will have lower BMI on average compared to those that do not.  This figure seems to suggest that excercise is a significant factor.
+Hypothesis: Respondent that exercised in the past month will have lower BMI on average compared to those that do not.  This figure seems to suggest that excercise is a factor.
 
 Conclusion: People with lower BMI have excersiced recently.
 
@@ -281,7 +281,7 @@ summary(cdc$bmi[cdc$exerany == 1])
 summary(cdc$bmi[cdc$exerany == 0])
 ```
 
-Hypothesis: Respondent that have some form of health coverage will have similar BMI on average compared to those that do not.  This figure seems to suggest that having some form of health coverage is not significant factor.
+Hypothesis: Respondent that have some form of health coverage will have similar BMI on average compared to those that do not.  This figure seems to suggest that having some form of health coverage is not a factor.
 
 Conclusion: People with some form of health coverage and those that do not have similar BMI.
 
@@ -296,6 +296,8 @@ summary(cdc$bmi[cdc$hlthplan == 1])
 summary(cdc$bmi[cdc$hlthplan == 0])
 ```
 
+Hypothesis: Respondent that have smoked at least 100 cigarettes in their entire life have higher BMI on average compared to those that do not.  This figure seems to suggest that smoking at least 100 cigarettes in a lifetime is not a factor.
+
 Conclusion: People with lower BMI have not smoked at least 100 cigarettes in their entire life.
 
 ```{r}
@@ -309,7 +311,9 @@ summary(cdc$bmi[cdc$smoke100 == 1])
 summary(cdc$bmi[cdc$smoke100 == 0])
 ```
 
-Hypothesis: Respondent that are male will have lower BMI on average compared to those that do not.  This figure seems to suggest that gender is a significant factor.
+Hypothesis: Respondent that are male will have lower BMI on average compared to to female.  This figure seems to suggest that gender is a factor.
+
+Conclusion: Females have lower BMI than males.
 
 ```{r}
 # IQR range is larger in female. Male shows higher median BMI

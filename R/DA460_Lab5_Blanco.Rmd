@@ -2,14 +2,18 @@
 title: "DA 460 - Lab 5"
 author: "Marjorie Blanco"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(Rmisc)
+library(DescTools)
 ```
 
-# Handout 5 R: Inference for numerical data
+# Handout 5 R: Foundations for statistical inference - Confidence intervals
 
 ## The data
 
@@ -18,29 +22,62 @@ download.file("http://www.openintro.org/stat/data/ames.RData", destfile = "ames.
 load("ames.RData")
 ```
 
-In this lab we'll start with a simple random sample of size 60 from the population. Specifically, this is a simple random sample of size 60. Note that the data set has information on many housing variables, but for the first portion of the lab we'll focus on the size of the house, represented by the variable Gr.Liv.Area.
+Simple random sample of size 60 for the size of the house, represented by the variable Gr.Liv.Area, from the population.
 
 ```{r}
 # the ground living area
 population <- ames$Gr.Liv.Area
+
+summary(ames$Gr.Liv.Area)
+hist(ames$Gr.Liv.Area, main = "Histogramfor Ground Living Area", xlab = "Ground Living Area")
+
 # simple random sample of size 60
 samp <- sample(population, 60)
 ```
 
+Confidence intervals at the confidence level 95% for Ames data set for the ground living area
+
+```{r}
+# varius way to get confidence intervals 
+t.test(ames$Gr.Liv.Area, alternative="two.sided", conf.level=0.95)
+CI(ames$Gr.Liv.Area, ci=0.95)
+MeanCI(ames$Gr.Liv.Area, conf.level=0.95)
+```
+
 ### Exercise 1
+
 Describe the distribution of your sample. What would you say is the "typical" size within your sample? Also state precisely what you interpreted "typical" to mean.
 
 ```{r}
 summary(samp)
 
 xlimits <- range(samp)
-hist(samp, breaks = 20, xlim = xlimits)
+hist(samp, breaks = 20, xlim = xlimits, prob=TRUE)
+curve(dnorm(x, mean=mean(samp), sd=sd(samp)), add=TRUE)
+
+# population mean
+abline(v=mean(population), col="blue")
+# sample mean
+abline(v=mean(samp), col="red")
+# sample mean
+abline(v=median(samp), col="green")
 ```
 
+The distribution for `samp` is unimodal, near normally distributed but right skewed. The median (`r round(median(samp), 3)`) is less than the mean (`r round(mean(samp), 3)`).  The standard deviation is `r round(sd(samp), 3)`.  The "typical" to means that the typical sample mean would fall around the population mean.  The "typical" size within a sample would fall near the population mean.
+
+The data follow does follow a near normally distribution.
+
+- Mean (red line): `r round(mean(samp), 3)`
+
+- Median (green line): `r median(samp)`
+
+- SD: `r round(sd(samp), 3)`
+
 ### Exercise 2
+
 Would you expect another student's distribution to be identical to yours? Would you expect it to be similar? Why or why not?
 
-
+Another student's distribution will not be idential but similar to mine as both samples are random sampling from the population (data set). I would expect the distribution to be similar (not exact) because then the sampling distribution of the point estimate (mean) should be centered.
 
 ## Confidence intervals
 
@@ -48,16 +85,22 @@ Would you expect another student's distribution to be identical to yours? Would 
 sample_mean <- mean(samp)
 
 se <- sd(samp) / sqrt(60)
-lower <- sample_mean - 1.96 * se
-upper <- sample_mean + 1.96 * se
+lower <- sample_mean - qnorm(.975) * se
+upper <- sample_mean + qnorm(.975) * se
 c(lower, upper)
 ```
 
+```{r}
+t.test(samp)
+CI(samp, ci=0.95)
+MeanCI(samp, conf.level=0.95)
+```
 
 ### Exercise 3
 
 For the confidence interval to be valid, the sample mean must be normally distributed and have standard error s/sqrt(n). What conditions must be met for this to be true?
 
+For the confidence interval to be valid, the sample must be random and independent, the sample size should be greater than 30, and the disribution should be approximately normally distributed and not strongly skewed.
 
 ## Confidence levels
 
@@ -65,36 +108,24 @@ For the confidence interval to be valid, the sample mean must be normally distri
 
 What does "95% confidence" mean? If you're not sure, see Section 4.2.2.
 
+After taking many samples and building a confidence interval from each sample then about 95% of those intervals would contain the actual mean.  The confidence interval for the population parameter is point estimate ± z⋅SE where z is the confidence level selected.
+
 ```{r}
 mean(population)
+mean(samp)
+c(lower, upper)
 ```
+
+We are 95% confident that the population parameter is between 1516.867 and 1889.966.
 
 ### Exercise 5
 
-Does your confidence interval capture the true average size of houses in Ames?
+Does your confidence interval capture the true average size of houses in Ames?  If you are working on this lab in a classroom, does your neighbor’s interval capture this value?
+
+The confidence interval does capture the true average size of houses in Ames. I would expect my classmate to capture the mean value as well.
 
 ### Exercise 6
 
+Each student in your class should have gotten a slightly different confidence interval. What proportion of those intervals would you expect to capture the true population mean? Why?
 
-```{r}
-# create vector to save mean for 50 samples of size 60
-samp_mean <- rep(NA, 50)
-# create vector to save standard deviation for 50 samples of size 60
-samp_sd <- rep(NA, 50)
-# sample size
-n <- 60
-
-# calculate the means and standard deviations of 50 random samples
-for(i in 1:length(samp_mean)){
-  samp <- sample(population, n) # obtain a sample of size n = 60 from the population
-  samp_mean[i] <- mean(samp)    # save sample mean in ith element of samp_mean
-  samp_sd[i] <- sd(samp)        # save sample sd in ith element of samp_sd
-}
-
-# construct the confidence intervals.
-lower_vector <- samp_mean - 1.96 * samp_sd / sqrt(n) 
-upper_vector <- samp_mean + 1.96 * samp_sd / sqrt(n)
-
-# Lower bounds stored in lower_vector, and the upper bounds in upper_vector
-c(lower_vector[1], upper_vector[1])
-```
+I would expect 95% of the intervals would captue the true population mean, the remaining 5% will be due to a marging of error.

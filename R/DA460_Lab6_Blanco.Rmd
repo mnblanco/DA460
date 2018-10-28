@@ -2,34 +2,56 @@
 title: "DA 460 - Lab 6"
 author: "Marjorie Blanco"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(plyr)
+library(knitr)
+library(Rmisc)
+library(DescTools)
 ```
 
-# Handout 6 R: Inference for numerical data
+# Handout 6 R: Inference for numerical and categorical data
 
-### Exploratory analysis
+## Inference for numerical data
+
+## Exploratory analysis
 
 Numerical
+
 - fage: father's age in years
+
 - mage: mother's age in years
+
 - weeks: length of pregnancy in weeks
+
 - visits: number of hospital visits during pregnancy
+
 - gained: weight gained by mother during pregnancy in pounds
+
 - weight: weight of the baby at birth in pounds
 
-
 Categorical
+
 - mature maturity status of mother. 
+
 - premie: whether the birth was classified as premature (premie) or full-term
+
 - marital whether mother is married or not married at birth
+
 - lowbirthweight: whether baby was classified as low birthweight (low) or not (not low)
+
 - gender: gender of the baby, female or male
+
 - habit: status of the mother as a nonsmoker or a smoker
+
 - whitemom: whether mom is white or not white
+
+## The data
 
 ```{r}
 # Load the nc data set into our workspace.
@@ -41,14 +63,19 @@ load("nc.RData")
 
 What are the cases in this data set? How many cases are there in our sample?
 
-Each row is record that contains information for each recorded birth in 2004 in the state of North Carolina. Add code for columns and row.
+Each row is a record that contains information for each recorded birth in 2004 in the state of North Carolina. There are `r nrow(nc)` cases in the sample.
 
 ```{r}
 # summaries of the data
 summary(nc)
+
+# number of cases
+nrow(nc)
 ```
 
 As you review the variable summaries, consider which variables are categorical and which are numerical. For numerical variables, are there outliers?
+
+All the numerical variables contain outliers.
 
 ```{r}
 boxplot(nc$fage, main="Boxplot of father's Age", ylab="Age")
@@ -63,7 +90,21 @@ boxplot(nc$weight, main="Boxplot of weight of baby at birth (lbs)", ylab="Weight
 
 Make a side-by-side boxplot of habit and weight. What does the plot highlight about the relationship between these two variables?
 
+The boxplot shows that there may be a reduction in birthweight from smoking mothers. There are a lot more outliers in the underweight subset of the birthweight for non-smokers. This is an indication that there are higher proportion of non-smoking sample records.
+
 ```{r}
+smoker_set <- count(nc$habit == 'smoker')
+names(smoker_set) <- c("smoker", "total")
+smoker_set$percent <- smoker_set$total / sum(smoker_set$total) * 100
+kable(smoker_set)
+```
+
+```{r}
+smoker_weight <- nc[nc$habit == "smoker", "weight"]
+nonsmoker_weight <- nc[nc$habit == "nonsmoker", "weight"]
+boxplot(smoker_weight)
+boxplot(nonsmoker_weight)
+boxplot(nc$habit, nc$weight)
 by(nc$weight, nc$habit, mean)
 ```
 
@@ -73,13 +114,36 @@ by(nc$weight, nc$habit, mean)
 
 Check if the conditions necessary for inference are satisfied. Note that you will need to obtain sample sizes to check the conditions. You can compute the group size using the same by command above but replacing mean with length.
 
+The sample size conditions is satisfied since each group (nonsmoker and smoker) is over 30.
+
+```{r}
+by(nc$weight, nc$habit, length)
+```
+
+```{r}
+p <- round(nrow(nc[nc$habit == "smoker",])/nrow(nc), 2)
+p
+```
+
+The success-failure conditons requires np >= 10 and n(1-p) >= 10. 
+
+np = `r nrow(nc)` * `r p` = `r nrow(nc) * p` >= 10
+
+n (1-p) = `r nrow(nc)` * `r 1-p` = `r nrow(nc) * (1-p)` >= 10
+
+The conditions necessary for inference are satisfied.
+
 ### Exercise 4
 
 Write the hypotheses for testing if the average weights of babies born to smoking and non-smoking mothers are different.
 
-H0: mu_nonsmoker - mu_smoker = 0 
+H0: mu_nonsmoker - mu_smoker = 0
+
+Average weights of babies born to smoking and non-smoking mothers are the same.
 
 HA: mu_nonsmoker - mu_smoker != 0 
+
+Average weights of babies born to smoking and non-smoking mothers are different.
 
 ```{r}
 # inference is use for conducting hypothesis tests and constructing confidence intervals
@@ -87,10 +151,11 @@ inference(y = nc$weight, x = nc$habit, est = "mean", type = "ht", null = 0,
           alternative = "twosided", method = "theoretical")
 ```
 
+Since our p-value is > 0.05 we fail to reject null hypothesis; the average weights of babies born to smoking and non-smoking mothers are not different.
+
 ### Exercise 5
 
 Change the type argument to "ci" to construct and record a confidence interval for the difference between the weights of babies born to smoking and non-smoking mothers.
-
 
 ```{r}
 inference(y = nc$weight, x = nc$habit, est = "mean", type = "ci", null = 0, 
@@ -98,5 +163,367 @@ inference(y = nc$weight, x = nc$habit, est = "mean", type = "ci", null = 0,
           order = c("smoker","nonsmoker"))
 ```
 
+The 95% confidence interval = ( -0.5777 , -0.0534 ) does not contains 0.
 
+## Inference for categorical data
 
+## The data
+
+```{r}
+download.file("http://www.openintro.org/stat/data/atheism.RData", destfile = "atheism.RData")
+load("atheism.RData")
+```
+
+### Exercise 1
+
+In the first paragraph, several key findings are reported. Do these percentages appear to be sample statistics (derived from the data sample) or population parameters?
+
+About 50,000 men and women were surveyed from 57 countries across the globe in five continent.  These percentages appear to be sample statistics derived from the interviews conducted accross the world. This data set does not represent the entire population of the world.  It is not feasible or practical to survey every person in this world if he/she is a religious person, not a religious persons or a convinced atheist.  
+
+### Exercise 2
+
+The title of the report is "Global Index of Religiosity and Atheism". To generalize the report's findings to the global human population, what must we assume about the sampling method? Does that seem like a reasonable assumption?
+
+To generalize the report's findings to the global human population, the assumption are:
+
+- Samples were randomly selected.
+
+- The groups are independent of each other.
+
+- Sample size is large enough (np >= 10 and n(1-p) >= 10).
+
+### Exercise 3
+
+What does each row of Table 6 correspond to? What does each row of atheism correspond to?
+
+Each row of Table 6 correspond to a country with response percentages for all groups (religious persons, not religious persons, atheists, don't know/no response), whereas each row of atheism corresponds a country with responses only related to atheist and non-atheist.
+
+To investigate the link between these two ways of organizing this data, take a look at the estimated proportion of atheists in the United States. Towards the bottom of Table 6, we see that this is 5%. We should be able to come to the same number using the atheism data.
+
+### Exercise 4
+
+Using the command below, create a new dataframe called us12 that contains only the rows in atheism associated with respondents to the 2012 survey from the United States. Next, calculate the proportion of atheist responses. Does it agree with the percentage in Table 6? If not, why?
+
+```{r}
+us12 <- subset(atheism, nationality == "United States" & year == "2012")
+by(us12$nationality, us12$response, length)
+
+us12 <- subset(atheism, nationality == "United States" & year == "2012")
+pus12athe <- count(us12$response == 'atheist')
+names(pus12athe) <- c("atheist", "total")
+pus12athe$percent <- pus12athe$total / sum(pus12athe$total) * 100
+kable(pus12athe)
+```
+
+The proportion of atheist responses for the United States is `r round(nrow(us12[us12$response == "atheist",])/nrow(us12), 3)`.  This proportion is in agreement (not exact) with the percentage in Table 6.
+
+## Inference on proportions
+
+###  Exercise 5
+
+Write out the conditions for inference to construct a 95% confidence interval for the proportion of atheists in the United States in 2012. Are you confident all conditions are met?
+
+If the conditions for inference are reasonable, we can either calculate the standard error and construct the interval by hand, or allow the inference function to do it for us.
+
+- Samples were randomly selected.
+
+- The groups are independent of each other.
+
+- Sample size is large enough (np >= 10 and n(1-p) >= 10).
+
+```{r}
+p <- round(nrow(us12[us12$response == "atheist",])/nrow(us12), 2)
+p
+```
+
+The success-failure conditons requires np >= 10 and n(1-p) >= 10. 
+
+np = `r nrow(us12)` * `r p` = `r nrow(us12) * p` >= 10
+
+n (1-p) = `r nrow(us12)` * `r 1-p` = `r nrow(us12) * (1-p)` >= 10
+
+The success-failure condition was met.
+
+```{r}
+inference(us12$response, est = "proportion", type = "ci", method = "theoretical", 
+          success = "atheist")
+```
+
+### Exercise 6
+
+Based on the R output, what is the margin of error for the estimate of the proportion of the proportion of atheists in US in 2012?
+
+```{r}
+# Margin of error: z * (standard of error)
+# 95%: z = 1.96
+me <- qnorm(.975) * 0.0069
+me
+paste("Margin of Error: +/-", me)
+```
+
+The margin of error for US is `r me`.
+
+### Exercise 7
+
+Using the inference function, calculate confidence intervals for the proportion of atheists in 2012 in two other countries of your choice, and report the associated margins of error. Be sure to note whether the conditions for inference are met. It may be helpful to create new data sets for each of the two countries first, and then use these data sets in the inference function to construct the confidence intervals.
+
+```{r}
+canada <- subset(atheism, nationality == "Canada" & year == "2012")
+italy <- subset(atheism, nationality == "Italy" & year == "2012")
+azerbaijan <- subset(atheism, nationality == "Azerbaijan" & year == "2012")
+```
+
+Countries selected: Canada, Italy and Azerbaijan
+
+```{r}
+inference(canada$response, est = "proportion", type = "ci", method = "theoretical", 
+          success = "atheist")
+
+canada12 <- subset(atheism, nationality == "Canada" & year == "2012")
+canada12athe <- count(canada12$response == 'atheist')
+names(canada12athe) <- c("atheist", "total")
+canada12athe$percent <- canada12athe$total / sum(canada12athe$total) * 100
+kable(canada12athe)
+```
+
+```{r}
+p <- round(nrow(nc[canada$response == "atheist",])/nrow(nc), 2)
+p
+```
+
+np = `r nrow(canada)` * `r p` = `r nrow(canada) * p` >= 10
+
+n (1-p) = `r nrow(canada)` * `r 1-p` = `r nrow(canada) * (1-p)` >= 10
+
+The sample sizes satisfy the Success failure condition
+
+```{r}
+# Margin of error: z * (standard of error)
+# 95%: z = 1.96
+me <- qnorm(.975) * 0.009
+me
+paste("Margin of Error: +/-", me)
+```
+
+The margin of error for Canada is `r me`.
+
+```{r}
+inference(italy$response, est = "proportion", type = "ci", method = "theoretical", 
+          success = "atheist")
+
+italy12 <- subset(atheism, nationality == "Italy" & year == "2012")
+italy12athe <- count(italy12$response == 'atheist')
+names(italy12athe) <- c("atheist", "total")
+italy12athe$percent <- italy12athe$total / sum(italy12athe$total) * 100
+kable(italy12athe)
+```
+
+```{r}
+p <- round(nrow(nc[italy$response == "atheist",])/nrow(nc), 2)
+p
+```
+
+np = `r nrow(italy)` * `r p` = `r nrow(italy) * p` >= 10
+
+n (1-p) = `r nrow(italy)` * `r 1-p` = `r nrow(italy) * (1-p)` >= 10
+
+The sample sizes satisfy the Success failure condition
+
+```{r}
+# Margin of error: z * (standard of error)
+# 95%: z = 1.96
+me <- qnorm(.975) * 0.0086
+me
+paste("Margin of Error: +/-", me)
+```
+
+The margin of error for Italy is `r me`.
+
+```{r}
+aze12 <- subset(atheism, nationality == "Azerbaijan" & year == "2012")
+aze12athe <- count(aze12$response == 'atheist')
+names(aze12athe) <- c("atheist", "total")
+aze12athe$percent <- aze12athe$total / sum(aze12athe$total) * 100
+kable(aze12athe)
+```
+
+```{r}
+p <- round(nrow(nc[azerbaijan$response == "atheist",])/nrow(nc), 2)
+p
+```
+
+np = `r nrow(azerbaijan)` * `r p` = `r nrow(azerbaijan) * p` >= 10
+
+n (1-p) = `r nrow(azerbaijan)` * `r 1-p` = `r nrow(azerbaijan) * (1-p)` >= 10
+
+The sample sizes does not satisfy the Success failure condition
+
+## How does the proportion affect the margin of error?
+
+```{r}
+n <- 1000
+p <- seq(0, 1, 0.01)
+me <- 2 * sqrt(p * (1 - p)/n)
+plot(me ~ p, ylab = "Margin of Error", xlab = "Population Proportion")
+```
+
+### Exercise 8
+
+Describe the relationship between p and me.
+
+The proportion of 0.5 is the proportion that will have the largest margin of error.  As p comes near to 0.5 the bigger margin of error will be and as p comes near 0 or 1 the lower margin of error will be.
+
+## Success-failure condition
+
+Case: n=1040 and p=0.1
+
+```{r}
+p <- 0.1
+n <- 1040
+p_hats <- rep(0, 5000)
+
+for(i in 1:5000){
+  samp <- sample(c("atheist", "non_atheist"), n, replace = TRUE, prob = c(p, 1-p))
+  p_hats[i] <- sum(samp == "atheist")/n
+}
+
+hist(p_hats, main = "p = 0.1, n = 1040", xlim = c(0, 0.18), prob=TRUE)
+curve(dnorm(x, mean=mean(p_hats), sd=sd(p_hats)), add=TRUE)
+
+# sample mean
+abline(v=mean(p_hats), col="red")
+# sample mean
+abline(v=median(p_hats), col="green")
+```
+
+The distribution is unimodal, near normally distributed.
+
+- Mean (red line): `r round(mean(p_hats), 3)`
+
+- Median (green line): `r median(p_hats)`
+
+- SD: `r round(sd(p_hats), 3)`
+
+### Exercise 9
+
+Describe the sampling distribution of sample proportions at n=1040  and p=0.1. Be sure to note the center, spread, and shape.
+
+Hint: Remember that R has functions such as mean to calculate summary statistics.
+
+```{r}
+summary(p_hats)
+```
+
+### Exercise 10
+
+Repeat the above simulation three more times but with modified sample sizes and proportions: for n=400 and p=0.1, n=1040 and p=0.02, and n=400 and p=0.02. Plot all four histograms together by running the par(mfrow = c(2, 2)) command before creating the histograms. You may need to expand the plot window to accommodate the larger two-by-two plot. Describe the three new sampling distributions. Based on these limited plots, how does n appear to affect the distribution of p̂ ? How does p affect the sampling distribution?
+
+Case: n=400 and p=0.1
+
+```{r}
+p <- 0.1
+n <- 400
+p_hats1 <- rep(0, 5000)
+
+for(i in 1:length(p_hats1)){
+  samp <- sample(c("atheist", "non_atheist"), n, replace = TRUE, prob = c(p, 1-p))
+  p_hats1[i] <- sum(samp == "atheist")/n
+}
+```
+
+The distribution is unimodal, near normally distributed.
+
+- Mean: `r round(mean(p_hats1), 3)`
+
+- Median: `r median(p_hats1)`
+
+- SD: `r round(sd(p_hats1), 3)`
+
+Case: n=1040 and p=0.02
+
+```{r}
+p <- 0.02
+n <- 1040
+p_hats2 <- rep(0, 5000)
+
+for(i in 1:length(p_hats2)){
+  samp <- sample(c("atheist", "non_atheist"), n, replace = TRUE, prob = c(p, 1-p))
+  p_hats2[i] <- sum(samp == "atheist")/n
+}
+```
+
+The distribution is unimodal, near normally distributed.
+
+- Mean: `r round(mean(p_hats2), 3)`
+
+- Median: `r median(p_hats2)`
+
+- SD: `r round(sd(p_hats2), 3)`
+
+Case: n=400 and p=0.02
+
+```{r}
+p <- 0.02
+n <- 400
+p_hats3 <- rep(0, 5000)
+
+for(i in 1:length(p_hats3)){
+  samp <- sample(c("atheist", "non_atheist"), n, replace = TRUE, prob = c(p, 1-p))
+  p_hats3[i] <- sum(samp == "atheist")/n
+}
+```
+
+The distribution is unimodal, near normally distributed.
+
+- Mean: `r round(mean(p_hats3), 3)`
+
+- Median: `r median(p_hats3)`
+
+- SD: `r round(sd(p_hats), 3)`
+
+````{r}
+par(mfrow = c(2, 2))
+
+hist(p_hats, main = "p = 0.1, n = 1040", xlim = c(0, 0.18), prob=TRUE)
+curve(dnorm(x, mean=mean(p_hats), sd=sd(p_hats)), add=TRUE)
+hist(p_hats1, main = "p = 0.1, n = 400", xlim = c(0, 0.18), prob=TRUE)
+curve(dnorm(x, mean=mean(p_hats1), sd=sd(p_hats1)), add=TRUE)
+hist(p_hats2, main = "p = 0.02, n = 1040", xlim = c(0, 0.18), prob=TRUE)
+curve(dnorm(x, mean=mean(p_hats2), sd=sd(p_hats2)), add=TRUE)
+hist(p_hats3, main = "p = 0.02, n = 400", xlim = c(0, 0.18), prob=TRUE)
+curve(dnorm(x, mean=mean(p_hats3), sd=sd(p_hats3)), add=TRUE)
+```
+
+All four plots appear to be distributed normally with very little skew. The smaller the n, the largerer the standard of error. The larger the n, the smaller the standard of error. The four means appear to be centered at the p value. When p=0.1, the mean appears to be at 0.1.  When p=0.02, the mean appears to be at 0.02.
+
+### Exercise 11
+
+If you refer to Table 6, you'll find that Australia has a sample proportion of 0.1 on a sample size of 1040, and that Ecuador has a sample proportion of 0.02 on 400 subjects. Let's suppose for this exercise that these point estimates are actually the truth. Then given the shape of their respective sampling distributions, do you think it is sensible to proceed with inference and report margin of errors, as the reports does?
+
+Assumption: np and n(1-p) are both greater than or equal to 10.
+
+Case: n=1040 and p=0.1 Country=Australia
+
+```{r}
+# Australia
+n_australia <- 1040
+p_australia <- 0.1
+
+condition_australia <- c(n_australia * p_australia >= 10, n_australia * (1 - p_australia) >= 10)
+condition_australia
+```
+
+Australia’s conditions are true for `n * p` and true for `n * ( 1 - p)`. Australia's conditions are met, it is sensible to proceed with inference and report margin of errors.
+
+Case: n=400 and p=0.02 Country=Ecuador
+
+```{r}
+# Ecuador
+n_ecuador <- 400
+p_ecuador <- 0.02
+
+condition_ecuador <- c(n_ecuador * p_ecuador >= 10, n_ecuador * (1 - p_ecuador) >= 10)
+condition_ecuador
+```
+
+Ecuador’s conditions are false for `n * p` and true for `n * ( 1 - p)`.  Ecuador’s conditions are not met, it is not sensible to proceed with inference and report margin of errors.

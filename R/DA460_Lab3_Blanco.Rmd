@@ -2,7 +2,9 @@
 title: "DA 460 - Lab 3"
 author: "Marjorie Blanco"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -28,13 +30,21 @@ fdims <- subset(bdims, sex == 0)
 
 ### Exercise 1
 
-Make a histogram of men's heights and a histogram of women's heights. How would you compare the various aspects of the two distributions?
+Make a histogram of `men's heights` and a histogram of `women's heights`. How would you compare the various aspects of the two distributions?
+
+Both distribution for men's height and women's height are nearly normally distributed.  The standard deviation for women's height is smaller than men's height.
 
 ## The normal distribution
+
+### Men's heights
+
 ```{r}
 # calculate mean and standard deviation for men's heights
 mhgtmean <- mean(mdims$hgt)
 mhgtsd   <- sd(mdims$hgt)
+mhgtmedian   <- median(mdims$hgt)
+freq <- tapply(mdims$hgt,mdims$hgt,length)
+mhgtmode <- as.numeric(names(freq)[which.max(freq)])
 
 # frequency histogram and density histogram for women's heights
 hist(mdims$hgt, probability = TRUE, main="Histogram of Height for males", xlab = "Height", breaks = 20)
@@ -47,11 +57,21 @@ The data follow a nearly normal distribution.
 
 - Mean: `r mhgtmean`
 
+- Median: `r mhgtmedian`
+
+- Mode: `r mhgtmode`
+
 - SD: `r mhgtsd`
+
+### Women's heights
+
 ```{r}
 # calculate mean and standard deviation for women's heights
 fhgtmean <- mean(fdims$hgt)
 fhgtsd   <- sd(fdims$hgt)
+fhgtmedian <- median(fdims$hgt)
+freq <- tapply(fdims$hgt,fdims$hgt,length)
+fhgtmode <- as.numeric(names(freq)[which.max(freq)])
 
 # frequency histogram and density histogram for women's heights
 hist(fdims$hgt, probability = TRUE, main="Histogram of Height for females", xlab = "Height", breaks = 20)
@@ -64,6 +84,10 @@ The data follow a nearly normal distribution.
 
 - Mean: `r fhgtmean`
 
+- Mean: `r fhgtmedian`
+
+- Mode: `r fhgtmode`
+
 - SD: `r fhgtsd`
 
 The mean for women's height is smaller than the men's height.
@@ -72,19 +96,23 @@ The mean for women's height is smaller than the men's height.
 
 Based on the this plot, does it appear that the data follow a nearly normal distribution?
 
-The data appears to follow a nearly normal distribution.
+The data for both women's height and men's height appears to follow a nearly normal distribution.  The mean, median and mode are not the same.
 
 ## Evaluating the normal distribution
 
 ```{r}
-# construct a normal probability plot
+# construct a normal probability plot for women's height
 qqnorm(fdims$hgt)
 qqline(fdims$hgt)
+
+# construct a normal probability plot for men's height
+qqnorm(mdims$hgt)
+qqline(mdims$hgt)
 ```
 
 ### Exercise 3
 
-Make a normal probability plot of sim_norm. Do all of the points fall on the line? How does this plot compare to the probability plot for the real data?
+Make a normal probability plot of `sim_norm`. Do all of the points fall on the line? How does this plot compare to the probability plot for the real data?
 
 Not all of the points fall on the line.  The majority of points fall on the line and the ones that don't are on the tail.
 
@@ -96,34 +124,66 @@ qqnorm(sim_norm)
 qqline(sim_norm)
 ```
 
-### Exercise 4
-
-Does the normal probability plot for fdims$hgt look similar to the plots created for the simulated data? That is, do plots provide evidence that the female heights are nearly normal?
-
-The normal probability plot for fdims$hgt look similar to the simulated data plots.  The simulated data plots provide evidence that the female heights are nearly normal.
+Not all of the points fall on the line.  The majority of points fall on the line and the ones that don't are on the tail.
 
 ```{r}
-# run QQplot simulation
+# simulate data from a normal distribution for men's heights
+sim_norm <- rnorm(n = length(mdims$hgt), mean = mhgtmean, sd = mhgtsd)
+# construct a normal probability plot
+qqnorm(sim_norm)
+qqline(sim_norm)
+```
+
+### Exercise 4
+
+Does the normal probability plot for `fdims$hgt` look similar to the plots created for the simulated data? That is, do plots provide evidence that the female heights are nearly normal?
+
+The normal probability plot for `fdims$hgt` look similar to the simulated data plots.  The simulated data plots provide evidence that the female heights are nearly normal.
+
+```{r}
+# run QQplot simulation for female height
 qqnormsim(fdims$hgt)
+```
+
+```{r}
+# run QQplot simulation for male height
+qqnormsim(mdims$hgt)
 ```
 
 ### Exercise 5
 
-Using the same technique, determine whether or not female weights appear to come from a normal distribution
+Using the same technique, determine whether or not female weights (`fdims$wgt`) appear to come from a normal distribution
 
-The data does not appears to follow a nearly normal distribution.  The normal probability plot for fdims$wgt does not look similar to the simulated data plots.  The simulated data plots provide evidence that the female weights are not normal distributed.  The data points for the female weight appear to have curvature.
+The data does not appears to be normal distribution.  The normal probability plot for `fdims$wgt` does not look similar to the simulated data plots.  The simulated data plots provide evidence that the female weights are not normal distributed.  The data points for the female weight appear to have curvature.
 
 ```{r}
 # calculate mean and standard deviation for women's weights
 fwgtmean <- mean(fdims$wgt)
 fwgtsd   <- sd(fdims$wgt)
+fwgtmedian <- median(fdims$wgt)
+freq <- tapply(fdims$wgt,fdims$wgt,length)
+fwgtmode <- as.numeric(names(freq)[which.max(freq)])
 
 # frequency histogram and density histogram for women's weights
-hist(fdims$wgt, probability = TRUE, main="Histogram of Weight", xlab = "Weight")
-x <- min(fdims$hgt):max(fdims$hgt)
+hist(fdims$wgt, probability = TRUE, main="Histogram of Weight for females", xlab = "Weight")
+x <- min(fdims$wgt):max(fdims$wgt)
 y <- dnorm(x = x, mean = fwgtmean, sd = fwgtsd)
 lines(x = x, y = y, col = "blue")
+```
 
+The data follow does not follow a normal distribution.
+
+- Mean: `r fwgtmean`
+
+- Median: `r fwgtmedian`
+
+- Mode: `r fwgtmode`
+
+- SD: `r fwgtsd`
+
+Not all of the points fall on the line.  The some of points fall on the line.
+
+```{r}
 # construct a normal probability plot
 qqnorm(fdims$wgt)
 qqline(fdims$wgt)
@@ -147,6 +207,8 @@ sum(fdims$hgt > 182) / length(fdims$hgt)
 
 Write out two probability questions that you would like to answer; one regarding female heights and one regarding female weights. Calculate the those probabilities using both the theoretical normal distribution as well as the empirical distribution (four probabilities in all). Which variable, height or weight, had a closer agreement between the two methods?
 
+Height had a closer agreement between the two methods.  The standard deviation for female height is `r fhgtsd`, while is `r fwgtsd` for female weight.
+
 What is the probability that a randomly chosen young adult female is shoter than 5 feet (about 152 cm)?
 
 ```{r}
@@ -154,12 +216,16 @@ pnorm(q = 152, mean = fhgtmean, sd = fhgtsd)
 sum(fdims$hgt < 152) / length(fdims$hgt)
 ```
 
+The difference is `r pnorm(q = 152, mean = fhgtmean, sd = fhgtsd) - sum(fdims$hgt < 152) / length(fdims$hgt)`.
+
 What is the probability that a randomly chosen young adult female is between 5 (about 152 cm) and 6 feet (about 182 cm)?
 
 ```{r}
 pnorm(q = 182, mean = fhgtmean, sd = fhgtsd) - pnorm(q = 152, mean = fhgtmean, sd = fhgtsd)
 sum(fdims$hgt > 152 & fdims$hgt < 182) / length(fdims$hgt)
 ```
+
+The difference is `r pnorm(q = 182, mean = fhgtmean, sd = fhgtsd) - pnorm(q = 152, mean = fhgtmean, sd = fhgtsd) - sum(fdims$hgt > 152 & fdims$hgt < 182) / length(fdims$hgt)`.
 
 What is the probability that a randomly chosen young adult female is taller than 160 cm?
 
@@ -170,9 +236,35 @@ What is the probability that a randomly chosen young adult female is taller than
 sum(fdims$hgt > 160) / length(fdims$hgt)
 ```
 
+The difference is `r 1 - pnorm(q = 160, mean = fhgtmean, sd = fhgtsd) - sum(fdims$hgt > 160) / length(fdims$hgt)`.
+
+What is the probability that a randomly chosen young adult female is weights more than 60 kg?
+
 ```{r}
 # calculate probability by calculating a Z score and consulting a Z table, theoretical
 1 - pnorm(q = 60, mean = fwgtmean, sd = fwgtsd)
 # calculate the probability empirically
 sum(fdims$wgt > 60) / length(fdims$wgt)
 ```
+
+The difference is `r 1 - pnorm(q = 60, mean = fwgtmean, sd = fwgtsd) - sum(fdims$wgt > 60) / length(fdims$wgt)`.
+
+What is the probability that a randomly chosen young adult female is weights less than 50 kg?
+
+```{r}
+# calculate probability by calculating a Z score and consulting a Z table, theoretical
+pnorm(q = 50, mean = fwgtmean, sd = fwgtsd)
+# calculate the probability empirically
+sum(fdims$wgt < 50) / length(fdims$wgt)
+```
+
+The difference is `r pnorm(q = 50, mean = fwgtmean, sd = fwgtsd) - sum(fdims$wgt < 50) / length(fdims$wgt)`.
+
+What is the probability that a randomly chosen young adult female is between 55 kg and 80 kg?
+
+```{r}
+pnorm(q = 80, mean = fwgtmean, sd = fwgtsd) - pnorm(q = 55, mean = fwgtmean, sd = fwgtsd)
+sum(fdims$wgt > 55 & fdims$wgt < 80) / length(fdims$wgt)
+```
+
+The difference is `r pnorm(q = 80, mean = fwgtmean, sd = fwgtsd) - pnorm(q = 55, mean = fwgtmean, sd = fwgtsd) - sum(fdims$wgt > 55 & fdims$wgt < 80) / length(fdims$wgt)`.

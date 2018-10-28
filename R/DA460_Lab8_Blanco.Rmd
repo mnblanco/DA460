@@ -1,119 +1,401 @@
 ---
-title: "DA 460 - Assignment 8"
+title: "DA 460 - Lab 8"
 author: "Marjorie Blanco"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library("dplyr")
+library(corrplot)
 ```
 
-# Handout 1 R: Introduction to linear regression
+# Handout 8 R: Multiple linear regression
 
+## The data
 
-Batter up
+```{r}
+download.file("http://www.openintro.org/stat/data/evals.RData", destfile = "evals.RData")
+load("evals.RData")
+str(evals)
+```
 
-The movie Moneyball focuses on the "quest for the secret of success in baseball". It follows a low-budget team, the Oakland Athletics, who believed that underused statistics, such as a player's ability to get on base, betterpredict the ability to score runs than typical statistics like home runs, RBIs (runs batted in), and batting average. Obtaining players who excelled in these underused statistics turned out to be much more affordable for the team.
+### Exercise 1
 
-In this lab we'll be looking at data from all 30 Major League Baseball teams and examining the linear relationship between runs scored in a season and a number of other player statistics. Our aim will be to summarize these relationships both graphically and numerically in order to find which variable, if any, helps us best predict a team's runs scored in a season.
+Is this an observational study or an experiment? The original research question posed in the paper is whether beauty leads directly to the differences in course evaluations. Given the study design, is it possible to answer this question as it is phrased? If not, rephrase the question.
 
+This is observational study since it is not randomization nor the variables were controlled.  I would phase the question as “is physical appearance (beatuy) of the college professor correlated to differences in course evaluation?”. Other factors were not collected in the study so it will be difficult to answer the question as it is originally phrased.
 
-The data
+### Exercise 2
 
-Let's load up the data for the 2011 season.
-download.file("http://www.openintro.org/stat/data/mlb11.RData", destfile = "mlb11.RData")
-load("mlb11.RData")
+Describe the distribution of score. Is the distribution skewed? What does that tell you about how students rate courses? Is this what you expected to see? Why, or why not?
 
-In addition to runs scored, there are seven traditionally used variables in the data set: at-bats, hits, home runs, batting average, strikeouts, stolen bases, and wins. There are also three newer variables: on-base percentage, slugging percentage, and on-base plus slugging. For the first portion of the analysis we'll consider the seven traditional variables. At the end of the lab, you'll work with the newer variables on your own.
-Exercise 1What type of plot would you use to display the relationship between runs and one of the other numerical variables? Plot this relationship using the variable at_bats as the predictor. Does the relationship look linear? If you knew a team's at_bats, would you be comfortable using a linear model to predict the number of runs?
+```{r}
+hist(evals$score, prob=TRUE)
+curve(dnorm(x, mean=mean(evals$score), sd=sd(evals$score)), add=TRUE)
+```
 
-If the relationship looks linear, we can quantify the strength of the relationship with the correlation coefficient.
-cor(mlb11$runs, mlb11$at_bats)
+The population for area is left right-skew and unimodal. The mean is `r round(mean(evals$score), 3)`, median is `r round(median(evals$score), 3)`, and the range is `r min(evals$score)` to `r max(evals$score)`.  The students rate course higher than expected.  If the professors were rated using a likert scale (1-5), I would expect the mean to be around 3.
 
+The data does not follow a normal distribution.
 
-Sum of squared residuals
+- Mean: `r round(mean(evals$score), 3)`
 
-Think back to the way that we described the distribution of a single variable. Recall that we discussed characteristics such as center, spread, and shape. It's also useful to be able to describe the relationship of two numerical variables, such as runs and at_bats above.
-Exercise 2Looking at your plot from the previous exercise, describe the relationship between these two variables. Make sure to discuss the form, direction, and strength of the relationship as well as any unusual observations.
+- Median: `r round(median(evals$score), 3)`
 
-Just as we used the mean and standard deviation to summarize a single variable, we can summarize the relationship between these two variables by finding the line that best follows their association. Use the following interactive function to select the line that you think does the best job of going through the cloud of points.
-plot_ss(x = mlb11$at_bats, y = mlb11$runs)
+- SD: `r round(sd(evals$score), 3)`
 
-After running this command, you'll be prompted to click two points on the plot to define a line. Once you've done that, the line you specified will be shown in black and the residuals in blue. Note that there are 30 residuals, one for each of the 30 observations. Recall that the residuals are the difference between the observed values and the values predicted by the line:
+### Exercise 3
 
+Excluding score, select two other variables and describe their relationship using an appropriate visualization (scatterplot, side-by-side boxplots, or mosaic plot).
 
-e i =y i ???y ^  i  
-ei=yi???y^i
+```{r}
+evals2 <- select_if(evals, is.numeric)
+corrplot(cor(evals2), method = "number")
 
+# average beauty decrease as age increase
+fit <- lm(evals$bty_avg ~evals$age)
+plot(evals$bty_avg ~evals$age)
+abline(fit)
+# average beauty increase as bty_m1upper increase
+fit <- lm(evals$bty_avg ~evals$bty_m1upper)
+plot(evals$bty_avg ~evals$bty_m1upper)
+abline(fit)
+# average beauty increase as cls_perc_eval increase
+fit <- lm(evals$bty_avg ~evals$cls_perc_eval)
+plot(evals$bty_avg ~evals$cls_perc_eval)
+abline(fit)
+# average beauty increase as bty_m1upper increase
+fit <- lm(evals$bty_avg ~evals$bty_m1upper)
+plot(evals$bty_avg ~evals$bty_m1upper)
+abline(fit)
+# average beauty increase as bty_m2upper increase
+fit <- lm(evals$bty_avg ~evals$bty_m2upper)
+plot(evals$bty_avg ~evals$bty_m2upper)
+abline(fit)
+# average beauty increase as bty_f1lower increase
+fit <- lm(evals$bty_avg ~evals$bty_f1lower)
+plot(evals$bty_avg ~evals$bty_f1lower)
+abline(fit)
 
-The most common way to do linear regression is to select the line that minimizes the sum of squared residuals. To visualize the squared residuals, you can rerun the plot command and add the argument showSquares = TRUE.
-plot_ss(x = mlb11$at_bats, y = mlb11$runs, showSquares = TRUE)
+boxplot(evals$bty_avg ~ evals$rank)
+boxplot(evals$bty_avg ~ evals$ethnicity)
+boxplot(evals$bty_avg ~ evals$gender)
+boxplot(evals$bty_avg ~ evals$language)
+boxplot(evals$bty_avg ~ evals$cls_level)
+boxplot(evals$bty_avg ~ evals$cls_profs)
+boxplot(evals$bty_avg ~ evals$cls_credits)
+boxplot(evals$bty_avg ~ evals$pic_outfit)
+boxplot(evals$bty_avg ~ evals$pic_color)
+```
 
-Note that the output from the plot_ss function provides you with the slope and intercept of your line as well as the sum of squares.
-Exercise 3Using plot_ss, choose a line that does a good job of minimizing the sum of squares. Run the function several times. What was the smallest sum of squares that you got? How does it compare to your neighbors?
+## Simple linear 
 
+```{r}
+fit <- lm(evals$score ~ evals$bty_avg)
+plot(evals$score ~ evals$bty_avg)
+abline(fit)
+```
 
-The linear model
+### Exercise 4
 
-It is rather cumbersome to try to get the correct least squares line, i.e. the line that minimizes the sum of squared residuals, through trial and error. Instead we can use the lm function in R to fit the linear model (a.k.a. regression line).
-m1 <- lm(runs ~ at_bats, data = mlb11)
+Replot the scatterplot, but this time use the function jitter() on the y- or the x-coordinate. What was misleading about the initial scatterplot?
 
-The first argument in the function lm is a formula that takes the form y ~ x. Here it can be read that we want to make a linear model of runs as a function of at_bats. The second argument specifies that R should look in the mlb11 data frame to find the runs and at_bats variables.
+The initial plot has many points overlapping.  The plots using jitter provided a better visual plot to determine the distribution.  We can identify areas of higher concentration that was not easy to easy in the original plot.
 
-The output of lm is an object that contains all of the information we need about the linear model that was just fit. We can access this information using the summary function.
+```{r}
+fit = lm(evals$score ~ evals$bty_avg)
+plot(jitter(evals$score) ~ evals$bty_avg)
+abline(fit)
+plot(evals$score ~ jitter(evals$bty_avg))
+abline(fit)
+plot(jitter(evals$score) ~ jitter(evals$bty_avg))
+abline(fit)
+```
+
+### Exercise 5
+
+Let’s see if the apparent trend in the plot is something more than natural variation. Fit a linear model called m_bty to predict average professor score by average beauty rating and add the line to your plot using abline(m_bty). Write out the equation for the linear model and interpret the slope. Is average beauty score a statistically significant predictor? Does it appear to be a practically significant predictor?
+
+```{r}
+m_bty <- lm(evals$score ~ evals$bty_avg)
+plot(jitter(evals$score) ~ jitter(evals$bty_avg))
+abline(m_bty)
+summary(m_bty)
+```
+
+The equation for the regression line is:
+
+$$score = 0.0666 * btyavg + 3.8803 $$
+
+Slope interpretation:
+
+When the average beauty (btyavg) of the professor goes up by 1, we would expect the rating evaluation (score) to go up by 0.0666 when all other variables are held constant.
+
+When the average beauty (btyavg) is 0, the rating evaluation (score) is 3.8803.
+
+Average beauty (bty_avg) is a statistically significant predictor. There is a lot of variance around the line and the slope is small. Average beauty explains 3.2% of the variance.
+
+### Exercise 6
+
+Use residual plots to evaluate whether the conditions of least squares regression are reasonable. Provide plots and comments for each one.
+
+```{r}
+plot(fit)
+```
+
+Conditions for linear regression:
+
+- Linearity
+
+The regression plot shows many plots scattered and not closed to regression line.  There is slightly linear positive linearity.
+
+- Normal residuals
+
+The qq plot shows evidence of non-normality.  Slightly left skewed distribution.
+
+- Constant variability
+
+There seems to have constant variability.
+
+- Independence of Observations
+
+There is no evidence of dependence.
+
+## Multiple linear regression
+
+### Exercise 7
+
+P-values and parameter estimates should only be trusted if the conditions for the regression are reasonable. Verify that the conditions for this model are reasonable using diagnostic plots.
+
+The residuals are nearly normal and data points have constant variability around regression line. The observations are independent of each other.  The conditions for this model using least squares regression are reasonable.
+
+### Exercise 8
+
+Is bty_avg still a significant predictor of score? Has the addition of gender to the model changed the parameter estimate for bty_avg?
+
+The addition of gender to the model did change the parameter estimate for bty_avg.
+
+```{r}
+m_bty_gen <- lm(evals$score ~ evals$bty_avg +  evals$gender)
+summary(m_bty_gen)
+multiLines(m_bty_gen)
+```
+
+The equation for the regression line is:
+
+$$score = 0.0742 * btyavg + gendermale *  0.1724 + 3.7473 $$
+
+When the average beauty score of the professor goes up by 1, we would expect the rating evaluation to go up by 0.0742 when all other variables are held constant.
+
+When the average beauty score is 0 and gender is female, the rating evaluation (score) is 3.8803 when all other variables are held constant.
+
+When the average beauty score is 0 and gender is female, the rating evaluation (score) is `r 3.8803 + 0.1724` when all other variables are held constant.
+
+### Exercise 9
+
+What is the equation of the line corresponding to males? (Hint: For males, the parameter estimate is multiplied by 1.) For two professors who received the same beauty rating, which gender tends to have the higher course evaluation score?
+
+For two professors, one male and  one female, who received the same beauty rating, the male tends to have the higher course evaluation score.
+
+```{r}
+score <- function(btyavg = NULL, gendermale = NULL)
+{
+  y <- 0.0742 * btyavg + 0.1724 * gendermale + 3.7473 
+  y <- round(y, 3)
+  return(y)
+}
+
+# male with beauty average of 2
+pred <- score(2, 1)
+pred
+# female with beauty average of 2
+pred <- score(2, 0)
+pred
+
+# male with beauty average of 5
+pred <- score(5, 1)
+pred
+# female with beauty average of 5
+pred <- score(5, 0)
+pred
+
+# male with beauty average of 8
+pred <- score(8, 1)
+pred
+# female with beauty average of 8
+pred <- score(8, 0)
+pred
+```
+
+The equation for the regression line is:
+
+When gender = Male, the equation will evaluate to:
+
+$$score = 0.0742 * btyavg + 0.1724 * gendermale + 3.7473 $$
+
+When gender = Female, the equation  will evaluate to:
+
+$$score = 0.0742 * btyavg + 3.7473 $$
+
+Slope interpretation:
+
+When the average beauty score of the professor goes up by 1, we would expect the rating evaluation to go up by 0.0742 when all other variables are held constant.
+
+When the professor is male, we would expect the rating evaluation to go up by 3.7473 when all other variables are held constant.
+
+### Exercise 10
+
+Create a new model called m_bty_rank with gender removed and rank added in. How does R appear to handle categorical variables that have more than two levels? Note that the rank variable has three levels:  teaching, tenure track, tenured.
+
+```{r}
+m_bty_rank <- lm(score ~ bty_avg + rank, data = evals)
+summary(m_bty_rank)
+multiLines(m_bty_rank)
+```
+The equation for the regression line is:
+
+When gender = Male, the equation will evaluate to:
+
+$$score = 0.0678 * btyavg - 0.1607 * ranktenure track - 0.1262 * ranktenured  + 3.9815 $$
+
+Slope interpretation:
+
+When the average beauty score of the professor goes up by 1, we would expect the rating evaluation to go up by 0.0678 when all other variables are held constant.
+
+When the professor rank is tenure track, we would expect the rating evaluation to decrease by 0.1607 when all other variables are held constant.
+
+When the professor rank is tenured, we would expect the rating evaluation to decrease by 0.1262 when all other variables are held constant.
+
+When the professor rank is teaching, we would expect the rating evaluation to neither decrease or increase when all other variables are held constant.
+
+## The search for the best model
+
+### Exercise 11
+
+Which variable would you expect to have the highest p-value in this model? Why? Hint: Think about which variable would you expect to not have any association with the professor score.
+
+I would expect the following variables to have high p-value: color, outfit, language, ethnicity
+
+```{r}
+m_full <- lm(score ~ rank + ethnicity + gender + language + age + cls_perc_eval 
+             + cls_students + cls_level + cls_profs + cls_credits + bty_avg 
+             + pic_outfit + pic_color, data = evals)
+```
+
+### Exercise  12
+
+Check your suspicions from the previous exercise. Include the model output in your response.
+
+```{r}
+summary(m_full)
+plot(m_full)
+```
+
+### Exercise 13
+
+Interpret the coefficient associated with the ethnicity variable.
+
+The `ethnicity not_minority` variable increases the score by 0.123493 when all other variables are held constant.
+
+Professor who are not from minority ethnicity tend to score 0.123493 more when other variables are held constant. Because the p-value > 0.5 the variable it’s not statistically significant.
+
+### Exercise 14
+
+Drop the variable with the highest p-value and re-fit the model. Did the coefficients and significance of the other explanatory variables change? (One of the things that makes multiple regression interesting is that coefficient estimates depend on the other variables that are included in the model.) If not, what does this say about whether or not the dropped variable was collinear with the other explanatory variables?
+
+The cls_profs has the highest p-value and was removed.  The significance and coefficient of the some of the explanatory variables changed. This indicates that the dropped variable, cls_profs, might be collinear with variables whose significance has increased.
+
+```{r}
+# remove cls_profs
+m1 <- lm(score ~ rank + ethnicity + gender + language + age + cls_perc_eval 
+             + cls_students + cls_level  + cls_credits + bty_avg 
+             + pic_outfit + pic_color, data = evals)
 summary(m1)
 
-Let's consider this output piece by piece. First, the formula used to describe the model is shown at the top. After the formula you find the five-number summary of the residuals. The "Coefficients" table shown next is key; its first column displays the linear model's y-intercept and the coefficient of at_bats. With this table, we can write down the least squares regression line for the linear model:
+anova(m_full, m1)
+```
 
+### Exercise 15
 
-y ^ =???2789.2429+0.6305???atbats 
-y^=???2789.2429+0.6305???atbats
+Using backward-selection and p-value as the selection criterion, determine the best model. You do not need to show all steps in your answer, just the output for the final model. Also, write out the linear model for predicting score based on the final model you settle on.
 
+```{r}
+# remove cls_profs
+m1 <- lm(score ~ rank + ethnicity + gender + language + age + cls_perc_eval 
+             + cls_students + cls_level  + cls_credits + bty_avg 
+             + pic_outfit + pic_color, data = evals)
+summary(m1)
 
-One last piece of information we will discuss from the summary output is the Multiple R-squared, or more simply, R 2  
-R2
-. The R 2  
-R2
- value represents the proportion of variability in the response variable that is explained by the explanatory variable. For this model, 37.3% of the variability in runs is explained by at-bats.
-Exercise 4Fit a new model that uses homeruns to predict runs. Using the estimates from the R output, write the equation of the regression line. What does the slope tell us in the context of the relationship between success of a team and its home runs?
+# remove cls_level
+m2 <- lm(score ~ rank + ethnicity + gender + language + age + cls_perc_eval 
+             + cls_students + cls_credits + bty_avg 
+             + pic_outfit + pic_color, data = evals)
+summary(m2)
 
+# remove cls_students
+m3 <- lm(score ~ rank + ethnicity + gender + language + age + cls_perc_eval 
+             + cls_credits + bty_avg + pic_outfit + pic_color, data = evals)
+summary(m3)
 
-Prediction and prediction errors
+# remove rank
+m4 <- lm(score ~ ethnicity + gender + language + age + cls_perc_eval 
+             + cls_credits + bty_avg + pic_outfit + pic_color, data = evals)
+summary(m4)
+```
 
-Let's create a scatterplot with the least squares line laid on top.
-plot(mlb11$runs ~ mlb11$at_bats)
-abline(m1)
+```{r}
+backwards <- step(m_full, direction = "backward", trace=TRUE ) 
+```
 
-The function abline plots a line based on its slope and intercept. Here, we used a shortcut by providing the model m1, which contains both parameter estimates. This line can be used to predict y 
-y
- at any value of x 
-x
-. When predictions are made for values of x 
-x
- that are beyond the range of the observed data, it is referred to as extrapolation and is not usually recommended. However, predictions made within the range of the data are more reliable. They're also used to compute the residuals.
-Exercise 5If a team manager saw the least squares regression line and not the actual data, how many runs would he or she predict for a team with 5,578 at-bats? Is this an overestimate or an underestimate, and by how much? In other words, what is the residual for this prediction?
+The best model is 
 
+$$score = 3.90703 + 0.16382 * ethnicitynot minority + 0.20260 * gendermale - 0.24668 * languagenon-english - 0.00692 * age + 0.00494 * cls_perc_eval + 0.51721 * cls_creditsone credit + 0.04673 * bty_avg - 0.11394 pic_outfitnot formal - 0.18087 * pic_colorcolor$$
 
-Model diagnostics
+### Exercise 16
 
-To assess whether the linear model is reliable, we need to check for (1) linearity, (2) nearly normal residuals, and (3) constant variability.
+Verify that the conditions for this model are reasonable using diagnostic plots. 
 
-Linearity: You already checked if the relationship between runs and at-bats is linear using a scatterplot. We should also verify this condition with a plot of the residuals vs. at-bats. Recall that any code following a # is intended to be a comment that helps understand the code but is ignored by R.
-plot(m1$residuals ~ mlb11$at_bats)
-abline(h = 0, lty = 3)  # adds a horizontal dashed line at y = 0
-Exercise 6Is there any apparent pattern in the residuals plot? What does this indicate about the linearity of the relationship between runs and at-bats?
+The conditions for this model are reasonable given that the diagnostic plots shows that residuals are nearly normal.
 
-Nearly normal residuals: To check this condition, we can look at a histogram
-hist(m1$residuals)
+```{r}
+plot(m4)
 
-or a normal probability plot of the residuals.
-qqnorm(m1$residuals)
-qqline(m1$residuals)  # adds diagonal line to the normal prob plot
-Exercise 7Based on the histogram and the normal probability plot, does the nearly normal residuals condition appear to be met?
+qqnorm(backwards$residuals)
+qqline(backwards$residuals)
 
-Constant variability:
-Exercise 8Based on the plot in (1), does the constant variability condition appear to be met?
+plot(backwards$residuals)
+abline(h = 0, lty = 3)
+```
 
+Assuming variable independence, the conditions for normality and homoscedasticity are met since in the qq-plot the data points fall along the normal line  and the spread of the residuals along the zero line does not show a pattern.
 
+### Exercise 17
 
+The original paper describes how these data were gathered by taking a sample of professors from the University of Texas at Austin and including all courses that they have taught. Considering that each row represents a course, could this new information have an impact on any of the conditions of linear regression?
+
+This new information would potentially affect the linear regression because there could be overlapping data ormulticollinearity. This might potentially violate the assumption of independence.
+
+### Exercise 18
+
+Based on your final model, describe the characteristics of a professor and course at University of Texas at Austin that would be associated with a high evaluation score.
+
+The characteristics of a professor and course at University of Texas at Austin that would be associated with a high evaluation score:
+
+A male professor typically receive higher evaluation.
+A professor that is not part of ethic minority group typically receive higher evaluation.
+A professor with higher average beauty score typically receive higher evaluation.
+A professor that teaches a one-credit course typically receive higher evaluation.
+A professor that received an education in a school that taught in english typically receive higher evaluation.
+A younger professor typically receive higher evaluation.
+A professor that uses a photo that has color typically receive lower evaluation.
+A professor that does not wear formal outfi typically receive lower evaluation.
+
+### Exercise 19
+
+Would you be comfortable generalizing your conclusions to apply to professors generally (at any university)? Why or why not?
+
+I won’t be comfortable in generalizing the conclusion as the sample may not be representative of entire population
