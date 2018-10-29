@@ -2,28 +2,37 @@
 title: "DA 460 - Assignment 4"
 author: "Marjorie Blanco"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+options("scipen"=100, "digits"=4)
 ```
+
+# Part 1 R
 
 ```{r, results='hide'}
 # load data
 download.file("http://www.openintro.org/stat/data/ames.RData", destfile = "ames.RData")
 load("ames.RData")
+
 # the sale price
 price <- ames$SalePrice
 ```
 
 So far, we have only focused on estimating the mean living area in homes in Ames. Now you'll try to estimate the mean home price.
 
+The mean for SalePrice for the ames data set is `r round(mean(price), 0)`.
+
 ```{r}
 # summary statistics for price
 summary(price)
 # histogram for price
-hist(price)
+hist(price, prob=TRUE)
+curve(dnorm(x, mean=mean(price), sd=sd(price)), add=TRUE)
 ```
 
 ## Problem 1
@@ -33,43 +42,98 @@ Take a random sample of size 50 from price. Using this sample, what is your best
 ```{r}
 # simple random sample of size 50
 samp1 <- sample(price, 50)
+mean(samp1)
 ```
+
+The best point estimate of the population mean is `r mean(samp1)`.
 
 ## Problem 2
 
-Since you have access to the population, simulate the sampling distribution for x(price) by taking 5000 samples from the population of size 50 and computing 5000 sample means. Store these means in a vector called sample_means50. Plot the data, then describe the shape of this sampling distribution. Based on this sampling distribution, what would you guess the mean home price of the population to be? Finally, calculate and report the population mean.
+Since you have access to the population, simulate the sampling distribution for x(price) by taking 2000 samples from the population of size 50 and computing 2000 sample means. Store these means in a vector called sample_means50. Plot the data, then describe the shape of this sampling distribution. Based on this sampling distribution, what would you guess the mean home price of the population to be? Finally, calculate and report the population mean.
 
 ```{r}
-sample_means50 <- rep(NA, 5000)
+#  2000 samples from the population
+sample_means50 <- rep(NA, 2000)
 
+# population of size 50
 for(i in 1:length(sample_means50)){
    samp <- sample(price, 50)
    sample_means50[i] <- mean(samp)
 }
 xlimits <- range(sample_means50)
-hist(sample_means50, breaks = 20, xlim = xlimits)
+hist(sample_means50, breaks = 20, xlim = xlimits, prob=TRUE)
+curve(dnorm(x, mean=mean(sample_means50), sd=sd(sample_means50)), add=TRUE)
+
+# population mean
+abline(v=mean(price), col="blue")
+# sample mean
+abline(v=mean(sample_means50), col="red")
 
 summary(sample_means50)
 ```
+
+The distribution for `SalePrice` for the `sample_means50` data set is unimodal, nearly normally distributed but slightly right skewed. The median (`r median(sample_means50)`) is less than the mean (`r mean(sample_means50)`).
+
+The best point estimate of the population mean is `r round(mean(sample_means50), 3)`.
 
 ## Problem 3
 
 Change your sample size from 50 to 150, then compute the sampling distribution using the same method as above, and store these means in a new vector called sample_means150. Describe the shape of this sampling distribution, and compare it to the sampling distribution for a sample size of 50. Based on this sampling distribution, what would you guess to be the mean sale price of homes in Ames?
 
 ```{r}
-sample_means150 <- rep(NA, 5000)
+#  5000 samples from the population
+sample_means150 <- rep(NA, 2000)
 
-for(i in 1:length(sample_means50)){
-   samp <- sample(price, 50)
+# population of size 150
+for(i in 1:length(sample_means150)){
+   samp <- sample(price, 150)
    sample_means150[i] <- mean(samp)
 }
 xlimits <- range(sample_means150)
-hist(sample_means150, breaks = 20, xlim = xlimits)
+hist(sample_means150, breaks = 20, xlim = xlimits, prob=TRUE)
+curve(dnorm(x, mean=mean(sample_means150), sd=sd(sample_means150)), add=TRUE)
+
+# population mean
+abline(v=mean(price), col="blue")
+# sample mean
+abline(v=mean(sample_means150), col="red")
 
 summary(sample_means150)
 ```
 
+The distribution for `SalePrice` for the `sample_means150` data set is unimodal, nearly normally distributed but slightly right skewed. The median (`r median(sample_means150)`) is less than the mean (`r mean(sample_means150)`).
+
+The best point estimate of the population mean is `r round(mean(sample_means150), 3)`.
+
 ## Problem  4
 
 Of the sampling distributions from 2 and 3, which has a smaller spread? If we're concerned with making estimates that are more often close to the true value, would we prefer a distribution with a large or small spread?
+
+I would prefer a distribution with small spread when making estimates.
+
+```{r}
+par(mfrow = c(2, 1))
+
+xlimits <- range(sample_means50)
+hist(sample_means50, breaks = 20, xlim = xlimits, prob=TRUE)
+curve(dnorm(x, mean=mean(sample_means50), sd=sd(sample_means50)), add=TRUE)
+
+# population mean
+abline(v=mean(price), col="blue")
+# sample mean
+abline(v=mean(sample_means50), col="red")
+
+xlimits <- range(sample_means150)
+hist(sample_means150, breaks = 20, xlim = xlimits, prob=TRUE)
+curve(dnorm(x, mean=mean(sample_means150), sd=sd(sample_means150)), add=TRUE)
+
+# population mean
+abline(v=mean(price), col="blue")
+# sample mean
+abline(v=mean(sample_means150), col="red")
+```
+
+sample_means50 distribution is from `r min(sample_means50)` to `r max(sample_means50)`.  The range is `r max(sample_means50) - min(sample_means50)`.
+
+sample_means150 distribution is from `r min(sample_means150)` to `r max(sample_means150)`.  The range is `r max(sample_means150) - min(sample_means150)`.
 

@@ -2,13 +2,47 @@
 title: "DA 460 - Assignment 5"
 author: "Marjorie Blanco"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output:
+  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(Rmisc)
+library(DescTools)
 ```
 
+# Part 1 R: Foundations for statistical inference - Confidence intervals
+
+```{r,}
+download.file("http://www.openintro.org/stat/data/ames.RData", destfile = "ames.RData")
+load("ames.RData")
+```
+
+```{r}
+# the ground living area
+population <- ames$Gr.Liv.Area
+
+# create vector to save mean for 50 samples of size 60
+samp_mean <- rep(NA, 50)
+# create vector to save standard deviation for 50 samples of size 60
+samp_sd <- rep(NA, 50)
+
+# sample size
+n <- 60
+
+# calculate the means and standard deviations of 50 random samples
+for(i in 1:length(samp_mean)){
+  samp <- sample(population, n) # obtain a sample of size n = 60 from the population
+  samp_mean[i] <- mean(samp)    # save sample mean in ith element of samp_mean
+  samp_sd[i] <- sd(samp)        # save sample sd in ith element of samp_sd
+}
+
+# construct the confidence intervals.
+lower_vector <- samp_mean - qnorm(.975) * samp_sd / sqrt(n) 
+upper_vector <- samp_mean + qnorm(.975) * samp_sd / sqrt(n)
+```
 
 ## Problem 1
 
@@ -16,19 +50,74 @@ Using the following function (which was downloaded with the data set), plot all 
 
 ```{r}
 plot_ci(lower_vector, upper_vector, mean(population))
+
+# proportion calculation
+p <- 1-(sum(lower_vector > mean(population) | upper_vector < mean(population))/length(samp_mean))
+p
 ```
+
+This is a plot of 50 confidence intervals of size = 60.  The `r p * 100`% of your confidence intervals include the true population mean. This proportion is not exactly equal to the confidence level of 95%.
+
+`r sum(lower_vector > mean(population) | upper_vector < mean(population))` out of the 50 intervals did not include the true mean, mu=`r round(mean(population), 3)`, which is roughly `r p*100`%.  About 95% will likely include the true value of the population.
 
 ## Problem 2
 
 Pick a confidence level of your choosing, provided it is not 95%. What is the appropriate critical value?
 
+Confidence level: 90%
+
+Signifiance level: 1 - a/2 = 1 - 0.10/2 = 0.95
+
+Critical value: `r qnorm(.95)`
+
 ```{r}
+criticalvalue<-qnorm(.95)
+criticalvalue
 ```
 
 ## Problem 3
 
 Calculate 50 confidence intervals at the confidence level you chose in the previous question. You do not need to obtain new samples, simply calculate new intervals based on the sample means and standard deviations you have already collected. Using the plot_ci function, plot all intervals and calculate the proportion of intervals that include the true population mean. How does this percentage compare to the confidence level selected for the intervals?
 
+```{r}
+# construct the confidence intervals.
+lower_vector <- samp_mean - criticalvalue * samp_sd / sqrt(n) 
+upper_vector <- samp_mean + criticalvalue * samp_sd / sqrt(n)
+```
 
 ```{r}
+plot_ci(lower_vector, upper_vector, mean(population))
+
+# proportion calculation
+p <- 1-(sum(lower_vector > mean(population) | upper_vector < mean(population))/50)
+p
 ```
+
+`r sum(lower_vector > mean(population) | upper_vector < mean(population))` out ofthe 50 intervals did not include the true mean, mu=`r round(mean(population), 3)`, which is roughly `r p*100`%.  About 90% will likely include the true value of the population.
+
+Confidence level: 80%
+
+Signifiance level: 1 - a/2 = 1 - 0.20/2 = 0.9
+
+Critical value: `r qnorm(.9)`
+
+```{r}
+criticalvalue<-qnorm(.9)
+criticalvalue
+```
+
+```{r}
+# construct the confidence intervals.
+lower_vector <- samp_mean - criticalvalue * samp_sd / sqrt(n) 
+upper_vector <- samp_mean + criticalvalue * samp_sd / sqrt(n)
+```
+
+```{r}
+plot_ci(lower_vector, upper_vector, mean(population))
+
+# proportion calculation
+p <- 1-(sum(lower_vector > mean(population) | upper_vector < mean(population))/50)
+p
+```
+
+`r sum(lower_vector > mean(population) | upper_vector < mean(population))` out ofthe 50 intervals did not include the true mean, mu=`r round(mean(population), 3)`, which is roughly `r p*100`%.  About 80% will likely include the true value of the population.

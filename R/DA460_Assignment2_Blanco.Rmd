@@ -85,12 +85,3 @@ If Kobe's shooting streaks diverge significantly from an independent shooter's s
 
 Since Kobe's streak length distribution looks very similar to the independent shooter's simulated steak length distribution, the conclusion is that Kobe Bryant does not have a "hot hand".
 
-
-In R the geometric distribution is the number of failures before a success, not the number of trials including the success. 
- So if we want to find the probability that the first hit is on the fourth toss, then the number of failure will be 3. Then from the previous example, the probability of tossing a head is 0.45.
-#The arguments to geom are geom(# of failures,p).
-dgeom(0,.45)
-dgeom(1,.45)
-dgeom(2,.45)
-dgeom(3,.45)
-

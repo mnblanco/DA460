@@ -1,0 +1,140 @@
+---
+title: "DA 460 - Assignment 7"
+author: "Marjorie Blanco"
+date: "`r format(Sys.time(), '%d %B, %Y')`"`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Handout 7 R: 
+
+## The data
+
+```{r}
+# Load the nc data set into our workspace.
+download.file("http://www.openintro.org/stat/data/mlb11.RData", destfile = "mlb11.RData")
+load("mlb11.RData")
+```
+
+### Exercise 1
+
+What type of plot would you use to display the relationship between runs and one of the other numerical variables? Plot this relationship using the variable at_bats as the predictor. Does the relationship look linear? If you knew a team’s at_bats, would you be comfortable using a linear model to predict the number of runs?
+
+A scatter plot is the best plot to display the relationship in between two variables.  The relationship between `at_bats` and `hits` appear to be linear.
+
+```{r}
+plot(mlb11$at_bats, mlb11$hits,  # plot the variables 
+    xlab="At Bats",              # x−axis label 
+    ylab="Hits")                 # y−axis label
+
+# quantify the strength of the relationship with the correlation coefficient
+cor(mlb11$at_bats, mlb11$hits)
+```
+
+## Sum of squared residuals
+
+### Exercise 2
+
+Looking at your plot from the previous exercise, describe the relationship between these two variables. Make sure to discuss the form, direction, and strength of the relationship as well as any unusual observations.
+
+The relationship seems to be a little sparsed or dispersed. The distribution of the points seems to grow in a positive direction with some leverage and the relationship seems to have a positive correlation.
+
+```{r}
+plot_ss(x = mlb11$at_bats, y = mlb11$runs)
+
+fit <- plot_ss(x = mlb11$at_bats, y = mlb11$runs, showSquares = TRUE)
+fit
+```
+
+### Exercise 3
+
+Using plot_ss, choose a line that does a good job of minimizing the sum of squares. Run the function several times. What was the smallest sum of squares that you got? How does it compare to your neighbors?
+
+The smallest sum of squares is  123721.9
+
+## The linear model
+
+```{r}
+m1 <- lm(runs ~ at_bats, data = mlb11)
+summary(m1)
+
+m2 <- lm(runs ~ hits, data = mlb11)
+summary(m2)
+
+anova(m1)
+anova(m2)
+anova(m1, m2)
+```
+
+### Exercise 4
+
+Fit a new model that uses homeruns to predict runs. Using the estimates from the R output, write the equation of the regression line. What does the slope tell us in the context of the relationship between success of a team and its home runs?
+
+$$runs = 1.835 * homeruns + 415.239 $$
+
+```{r}
+plot_ss(x = mlb11$homeruns, y = mlb11$runs, showSquares = TRUE)
+cor(mlb11$runs, mlb11$homeruns)
+fit <- lm(runs ~ homeruns, data = mlb11)
+summary(fit)
+```
+
+Prediction and prediction errors
+
+```{r}
+# create a scatterplot with the least squares line laid on top
+plot(mlb11$runs ~ mlb11$at_bats)
+abline(m1)
+```
+
+### Exercise 5
+
+If a team manager saw the least squares regression line and not the actual data, how many runs would he or she predict for a team with 5,578 at-bats? Is this an overestimate or an underestimate, and by how much? In other words, what is the residual for this prediction?
+
+```{r}
+runs <- function(x = NULL)
+    {
+        y <- 0.6305 * x - 2789.2429
+        y <- round(y,0)
+        return(y)
+}
+```
+
+## Model diagnostics
+
+```{r}
+plot(m1$residuals ~ mlb11$at_bats)
+abline(h = 0, lty = 3)  # adds a horizontal dashed line at y = 0
+```
+
+### Exercise 6
+
+Is there any apparent pattern in the residuals plot? What does this indicate about the linearity of the relationship between runs and at-bats?
+
+```{r}
+# Nearly normal residuals
+hist(m1$residuals)
+```
+
+```{r}
+# normal probability plot of the residuals
+qqnorm(m1$residuals)
+qqline(m1$residuals)  # adds diagonal line to the normal prob plot
+```
+
+### Exercise 7
+
+Based on the histogram and the normal probability plot, does the nearly normal residuals condition appear to be met?
+
+Based on both the thistogram and the normal probability plot, the normal residuals condition appear to be met.
+
+### Exercise 8
+
+Based on the plot in (1), does the constant variability condition appear to be met?
+
+Based on the graph (1) the points seem to follow a pattern, the constant variability condition appear to be met.
+
+

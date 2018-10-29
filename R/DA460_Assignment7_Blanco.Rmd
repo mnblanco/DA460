@@ -1,35 +1,171 @@
 ---
-title: "Untitled"
+title: "DA 460 - Assignment 7"
 author: "Marjorie Blanco"
-date: "July 5, 2018"
-output: html_document
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(corrplot)
 ```
 
-The question of atheism was asked by WIN-Gallup International in a similar survey that was conducted in 2005. (We assume here that sample sizes have remained the same.) Table 4 on page 13 of the report summarizes survey results from 2005 and 2012 for 39 countries.
+# Part 1 R: Introduction to Simple Linear Regression
 
-## Problem 1
+```{r}
+# Load the nc data set into our workspace.
+download.file("http://www.openintro.org/stat/data/mlb11.RData", destfile = "mlb11.RData")
+load("mlb11.RData")
 
-Answer the following two questions using the inference function. As always, write out the hypotheses for any tests you conduct and outline the status of the conditions for inference.
+mlb11$team <- NULL
+```
 
-a. Is there convincing evidence that Spain has seen a change in its atheism index between 2005 and 2012?
-Hint: Create a new data set for respondents from Spain. Form confidence intervals for the true proportion of athiests in both years, and determine whether they overlap.
+```{r}
+corrplot(cor(mlb11), method = "number")
+```
 
-b. Is there convincing evidence that the United States has seen a change in its atheism index between 2005 and 2012?
+### Problem 1
+
+Choose another traditional variable from `mlb11` that you think might be a good predictor of `runs`. Produce a scatterplot of the two variables and fit a linear model. At a glance, does there seem to be a linear relationship?
+
+```{r}
+fit0 <- lm(runs ~ bat_avg, data = mlb11)
+summary(fit0)
+
+plot(mlb11$runs~mlb11$bat_avg,
+    xlab="Bat Avg",              
+    ylab="Runs")   
+abline(fit0)
+
+# quantify the strength of the relationship with the correlation coefficient
+model_cor <- cor(mlb11$runs, mlb11$bat_avg)
+model_cor
+```
+
+The relationship between `bat_avg` and `runs` appears to be linear.
+
+### Problem 2
+
+How does this relationship compare to the relationship between `runs` and `at_bats`? Use the R2 values from the two model summaries to compare. Does your variable seem to predict `runs` better than `at_bats`? How can you tell?
+
+```{r}
+fit <- lm(runs ~ bat_avg, data = mlb11)
+summary(fit)
+
+plot(mlb11$runs ~ mlb11$bat_avg, 
+    xlab="Bat Avg",              
+    ylab="Runs") 
+abline(fit)
+
+summary(fit)$adj.r.squared
+```
+
+The equation for the regression line is:
+
+$$runs = 5242  * batavg - 643 $$
+
+```{r}
+fit <- lm(runs ~ at_bats, data = mlb11)
+summary(fit)
+
+plot(mlb11$runs ~ mlb11$at_bats, 
+    xlab="At Bats",              
+    ylab="Runs") 
+abline(fit)
+
+summary(fit)$adj.r.squared 
+```
+The equation for the regression line is:
+
+$$runs = 0.631  * atbats - 2789.243 $$
+
+The R2 for `runs` and `at_bats` is `0.373`. This indicates that 37.3% of variability can be explained by the model.  The R2 for `runs` and `bat_avg` is 0.656. This indicates that 65.6% of variability can be explained by the model.  The variable bat_avg seem to predict `runs` better than `at_bats`.
+
+### Problem 3
+
+Now that you can summarize the linear relationship between two variables, investigate the relationships between runs and each of the other five traditional variables. Which variable best predicts runs? Support your conclusion using the graphical and numerical methods we’ve discussed (for the sake of conciseness, only include output for the best variable, not all five).
+
+```{r, include=FALSE}
+fit1 <- lm(runs ~ homeruns, data = mlb11)
+summary(fit1)
+summary(fit1)$adj.r.squared 
+
+fit2 <- lm(runs ~ bat_avg, data = mlb11)
+summary(fit2)
+summary(fit2)$adj.r.squared 
+
+fit3 <- lm(runs ~ strikeouts, data = mlb11)
+summary(fit3)
+summary(fit3)$adj.r.squared 
+
+fit4 <- lm(runs ~ stolen_bases, data = mlb11)
+summary(fit4)
+summary(fit4)$adj.r.squared 
+
+fit5 <- lm(runs ~ homeruns, data = mlb11)
+summary(fit5)
+summary(fit5)$adj.r.squared 
+
+hist(fit2$residuals)
+qqnorm(fit2$residuals)
+qqline(fit2$residuals)
+```
+
+After reviewing summary statistics for all other traditional variables the best variable to predict `runs` is `bat_avg`. It has the highest R2.
+
+### Problem 4
+
+Now examine the three newer variables. These are the statistics used by the author of Moneyball to predict a team’s success. In general, are they more or less effective at predicting runs that the old variables? Explain using appropriate graphical and numerical evidence. Of all ten variables we’ve analyzed, which seems to be the best predictor of runs? Using the limited (or not so limited) information you know about these baseball statistics, does your result make sense?
+
+The three newer variables are more effective at predicting `runs` that the old variables. The variable `new_obs` is the best predictor of `runs`.  The `on base` makes sense as a good variable to predict `runs`.  The higher the number of players are on base the higher the probablity to score a `run`.
+
+```{r}
+fit1 <- lm(runs ~ new_obs, data = mlb11)
+summary(fit1)
+
+fit2 <- lm(runs ~ new_slug, data = mlb11)
+summary(fit2)
+
+fit3 <- lm(runs ~ new_onbase, data = mlb11)
+summary(fit3)
+```
+
+The equation for the regression line is:
+
+$$runs = 1919.4  * new_obs - 686.6 $$
+
+$$runs = 2681.3  * new_slug - 375.8 $$
 
 
-## Problem 2
+$$runs = 0.631  * new_onbase - 2789.243 $$
+### Problem 5
 
-If in fact there has been no change in the atheism index in the countries listed in Table 4, in how many of those countries would you expect to detect a change (at a significance level of 0.05) simply by chance?
-Hint: Look in the textbook index under Type 1 error.
+Check the model diagnostics for the regression model with the variable you decided was the best predictor for `runs`.
+
+```{r}
+plot(mlb11$runs~mlb11$new_obs,
+    xlab="New obs",              
+    ylab="Runs")   
+abline(fit1)
+
+hist(fit1$residuals)
+qqnorm(fit1$residuals)
+qqline(fit1$residuals)
+```
 
 
-## Problem 3
+Conditions for linear regression:
 
-Suppose you're hired by the local government to estimate the proportion of residents that attend a religious service on a weekly basis. According to the guidelines, the estimate must have a margin of error no greater than `1%` with `95%` confidence. You have no idea what to expect for p. How many people would you have to sample to ensure that you are within the guidelines?
-Hint: Refer to your plot of the relationship between p and margin of error. Do not use the data set to answer this question.
+- Linearity
 
+The regression plot shows many dots scattered closed to regression line.  This assumption has been met.
 
+- Normal residuals
+
+The qq plot shows evidence of normality.  Slightly left skewed distribution.
+
+- Constant variability
+
+There seems to have constant variability.

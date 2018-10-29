@@ -2,7 +2,9 @@
 title: "DA 460 - Assignment 3"
 author: "Marjorie Blanco"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -30,6 +32,7 @@ a. The histogram for female biiliac (pelvic) diameter (bii.di) belongs to normal
 ```{r}
 qqnorm(women$bii.di,  main="Normal Q-Q Plot B")
 qqline(women$bii.di)
+hist(women$bii.di, main="Histogram of female bii.di", xlab = "stad")
 ```
 
 b. The histogram for female elbow diameter (elb.di) belongs to normal probability plot letter C.
@@ -37,6 +40,7 @@ b. The histogram for female elbow diameter (elb.di) belongs to normal probabilit
 ```{r}
 qqnorm(women$elb.di,  main="Normal Q-Q Plot C")
 qqline(women$elb.di)
+hist(women$elb.di, main="Histogram of female elb.di", xlab = "stad")
 ```
 
 c. The histogram for general age (age) belongs to normal probability plot letter D.
@@ -44,6 +48,7 @@ c. The histogram for general age (age) belongs to normal probability plot letter
 ```{r}
 qqnorm(women$age,  main="Normal Q-Q Plot D")
 qqline(women$age)
+hist(women$age, main="Histogram of female age", xlab = "stad")
 ```
 
 d. The histogram for female chest depth (che.de) belongs to normal probability plot letter A.
@@ -51,25 +56,59 @@ d. The histogram for female chest depth (che.de) belongs to normal probability p
 ```{r}
 qqnorm(women$che.de,  main="Normal Q-Q Plot A")
 qqline(women$che.de)
+hist(women$che.de, main="Histogram of female che.de", xlab = "stad")
 ```
 
 ## Problem 2
 
-Note that normal probability plots C and D have a slight stepwise pattern.
-Why do you think this is the case?
+Note that normal probability plots C and D have a slight stepwise pattern.  Why do you think this is the case?
 
-Stepwise pattern is often found in discrete data. The variables for pelvic and elbow diameter were probably not recorded as integers, while age and chest depth probably were. <TBD>
+Stepwise pattern is often found in discrete data. The variables for pelvic and elbow diameter are continious data, while age is discrete.  The normal probability plots for age and elbow diameter displays a stepwise pattern.
 
+For stepwise, the multiplier values are considered to be the average value for the interval between the specified time and the next time. The stepwise patterns have staircase appearance. Multipliers are set at the specified time and held constant until the next point in the pattern.
+
+
+For continuous, the multipliers values are considered to be the instantaneous values at a particular time. The continuous patterns hdave a curvilinear appearance. Multipliers are set at the specified time, and are linearly increased or decreased to the next point in the pattern.
+
+```{r}
+head(women$bii.di)
+head(women$elb.di)
+head(women$age)
+head(women$che.de)
+```
 
 ## Problem 3
 
 As you can see, normal probability plots can be used both to assess normality and visualize skewness. Make a normal probability plot for female knee diameter (kne.di). Based on this normal probability plot, is this variable left skewed, symmetric, or right skewed? Use a histogram to confirm your findings.
 
-Based on the normal probability plot, the variable for female knee diameter appears to be right skewed. This is supported by the histogram.
+Based on the normal probability plot, the variable for female knee diameter appears to be right skewed. This is supported by the histogram and probability plot.
 
 ```{r}
 qqnorm(women$kne.di)
 qqline(women$kne.di)
-
-hist(women$kne.di, breaks = 20)
 ```
+
+```{r}
+# calculate mean and standard deviation for female knee diameter (kne.di)
+fkneditmean <- mean(women$kne.di)
+fknedisd   <- sd(women$kne.di)
+fknedimedian <- median(women$kne.di)
+freq <- tapply(women$kne.di,women$kne.di,length)
+fknedimode <- as.numeric(names(freq)[which.max(freq)])
+
+# frequency histogram and density histogram for female knee diameter (kne.di)
+hist(women$kne.di, probability = TRUE, breaks = 20, main="Histogram of female knee diameter (kne.di)", xlab = "Knee diameter")
+x <- min(women$kne.di):max(women$kne.di)
+y <- dnorm(x = x, mean = fkneditmean, sd = fknedisd)
+lines(x = x, y = y, col = "blue")
+```
+
+The data follow does not follow a normal distribution.
+
+- Mean: `r fkneditmean`
+
+- Median: `r fknedimedian`
+
+- Mode: `r fknedimode`
+
+- SD: `r fknedisd`

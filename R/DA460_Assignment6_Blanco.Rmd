@@ -2,46 +2,282 @@
 title: "DA 460 - Assignment 6"
 author: "Marjorie Blanco"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(plyr)
+library(knitr)
 ```
 
-## Problem 1
+# Part 1 R
 
-Calculate a 95% confidence interval for the average length of pregnancies (weeks) and interpret it in context. Note that since you're doing inference on a single population parameter, there is no explanatory variable, so you can omit the x variable from the function.
+## Inference for numerical data
 
 ```{r}
+# Load the nc data set into our workspace.
+download.file("http://www.openintro.org/stat/data/nc.RData", destfile = "nc.RData")
+load("nc.RData")
 ```
 
-## Problem 2
+### Problem 1
+
+Calculate a 95% confidence interval for the average length of pregnancies (`weeks`) and interpret it in context. Note that since you're doing inference on a single population parameter, there is no explanatory variable, so you can omit the x variable from the function.
+
+```{r}
+n <- nrow(nc)
+  
+# construct the confidence intervals.
+lower_vector <- mean(nc$weeks, na.rm = TRUE) - qnorm(.975) * sd(nc$weeks, na.rm = TRUE) / sqrt(n) 
+upper_vector <- mean(nc$weeks, na.rm = TRUE) + qnorm(.975) * sd(nc$weeks, na.rm = TRUE) / sqrt(n)
+
+# Lower bounds stored in lower_vector, and the upper bounds in upper_vector
+c(lower_vector[1], upper_vector[1])
+
+inference(y = nc$weeks, est = "mean", type = "ci", null = 0, alternative = "twosided", method = "theoretical")
+```
+
+We are 95% confident that the population parameter (for average length of pregnancies) is between 38.1528 and 38.5165.
+
+### Problem 2
 
 Calculate a new confidence interval for the same parameter at the 90% confidence level. You can change the confidence level by adding a new argument to the function: conflevel = 0.90.
 
 ```{r}
+n <- nrow(nc)
+  
+# construct the confidence intervals.
+lower_vector <- mean(nc$weeks, na.rm = TRUE) - qnorm(.95) * sd(nc$weeks, na.rm = TRUE) / sqrt(n) 
+upper_vector <- mean(nc$weeks, na.rm = TRUE) + qnorm(.95) * sd(nc$weeks, na.rm = TRUE) / sqrt(n)
+
+# Lower bounds stored in lower_vector, and the upper bounds in upper_vector
+c(lower_vector[1], upper_vector[1])
+
+inference(y = nc$weeks, est = "mean", type = "ci", conflevel = 0.90, null = 0, alternative = "twosided", method = "theoretical")
 ```
 
-## Problem 3
+We are 90% confident that the population parameter (for average length of pregnancies) is between 38.182 and 38.4873.
+
+### Problem 3
 
 Conduct a hypothesis test evaluating whether the average weight gained by younger mothers is different than the average weight gained by mature mothers.
 
+H0: mu_gained_youngmom - mu_gained_maturemom = 0 
+
+Average weight gained by younger mothers is same as the average weight gained by mature mothers.
+
+HA: mu_gained_youngmom - mu_gained_maturemom != 0 
+
+Average weight gained by younger mothers is different than the average weight gained by mature mothers.
+
 ```{r}
+youngmom <- nc[nc$mature == "younger mom", "gained"]
+maturemom <- nc[nc$mature == "mature mom", "gained"]
+
+# construct the confidence intervals.
+lower_vector <- mean(youngmom, na.rm = TRUE) - qnorm(.95) * sd(youngmom, na.rm = TRUE) / sqrt(n) 
+upper_vector <- mean(youngmom, na.rm = TRUE) + qnorm(.95) * sd(youngmom, na.rm = TRUE) / sqrt(n)
+
+# Lower bounds stored in lower_vector, and the upper bounds in upper_vector
+c(lower_vector[1], upper_vector[1])
+
+
+# construct the confidence intervals.
+lower_vector <- mean(maturemom, na.rm = TRUE) - qnorm(.95) * sd(maturemom, na.rm = TRUE) / sqrt(n) 
+upper_vector <- mean(maturemom, na.rm = TRUE) + qnorm(.95) * sd(maturemom, na.rm = TRUE) / sqrt(n)
+
+# Lower bounds stored in lower_vector, and the upper bounds in upper_vector
+c(lower_vector[1], upper_vector[1])
+
+inference(y = nc$gained, x = nc$mature, est = "mean", type = "ht", null = 0, 
+          alternative = "twosided", method = "theoretical", order = c("younger mom","mature mom"))
 ```
 
-## Problem 4
+Since p-value is > 0.05 we fail to reject null hypothesis; the average weight gained by mature women is not different that the average weight gained by younger mothers.
+
+### Problem 4
 
 Now, a non-inference task: Determine the age cutoff for younger and mature mothers. Use a method of your choice, and explain how your method works.
 
 ```{r}
+by(nc$mage, nc$mature, summary)
+
+boxplot(nc$mage ~ nc$mature, col="lightgray")
+
+inference(y = nc$gained, x = nc$mature, est = "mean", type = "ht", null = 0, 
+          alternative = "twosided", method = "theoretical", order = c("younger mom","mature mom"))
 ```
 
-## Problem 5
+Younger mom’s age cutoff: `r min(nc[nc$mature ==  "younger mom", "mage"])` years old to `r max(nc[nc$mature ==  "younger mom", "mage"])` years old.
+
+Mature mom’s age cutoff: `r min(nc[nc$mature ==  "mature mom", "mage"])` years old to `r max(nc[nc$mature ==  "mature mom", "mage"])` years old.
+
+Since p-value is > 0.05 we fail to reject null hypothesis; the average weight gained by mature women is not different that the average weight gained by younger. mothers.
+
+Method used the function by() and boxplot.  The summary function is execute for mother's age grouped by mature.
+
+### Problem 5
 
 Pick a pair of numerical and categorical variables and come up with a research question evaluating the relationship between these variables. Formulate the question in a way that it can be answered using a hypothesis test and/or a confidence interval. Answer your question using the inference function, report the statistical results, and also provide an explanation in plain language.
 
+Does the mother’s age has an prevalence on low birth weight?
+
+H0: mu_mage_lowbirthweight - mu_mage_notlowbirthweight = 0
+
+Mother’s age has no prevalence in low birth weight.
+
+HA: mu_mage_lowbirthweight - mu_mage_notlowbirthweight != 0
+
+Mother’s age has prevalence in low birth weight.
+
 ```{r}
+inference(y = nc$mage, x = nc$lowbirthweight, est = "mean", type = "ht", null = 0, 
+          alternative = "twosided", method = "theoretical")
 ```
 
+Since p-value is > 0.05 we fail to reject null hypothesis; the average mother’s age has no prevalence in low birth weight.
 
+Does the father’s age has an prevalence on low birth weight?
+
+H0: mu_fage_lowbirthweight - mu_fage_notlowbirthweight = 0 
+
+Father’s age has no prevalence in low birth weight.
+
+HA: mu_fage_lowbirthweight - mu_fage_notlowbirthweight != 0
+
+Father’s age has prevalence in low birth weight.
+
+```{r}
+inference(y = nc$fage, x = nc$lowbirthweight, est = "mean", type = "ht", null = 0, 
+          alternative = "twosided", method = "theoretical")
+```
+
+Since p-value is > 0.05 we fail to reject null hypothesis; the average father’s age has no prevalence in low birth weight.
+
+## Inference for categorical data
+
+```{r}
+download.file("http://www.openintro.org/stat/data/atheism.RData", destfile = "atheism.RData")
+load("atheism.RData")
+```
+
+### Problem 6
+
+Answer the following two questions using the inference function. As always, write out the hypotheses for any tests you conduct and outline the status of the conditions for inference.
+a. Is there convincing evidence that Spain has seen a change in its atheism index between 2005 and 2012?
+Hint: Create a new data set for respondents from Spain. Then use their responses as the first input on the inference, and use year as the grouping variable.
+
+H0: There is no convincing evidence that Spain has seen a change in its atheism index between 2005 and 2012
+
+H0: p2005 - p2012 = 0
+
+HA: There is convincing evidence that Spain has seen a change in its atheism index between 2005 and 2012
+
+HA: p2005 - p2012 != 0
+
+```{r}
+spain05 <- subset(atheism, nationality == "Spain" & year == "2005")
+pspain05athe <- count(spain05$response == 'atheist')
+names(pspain05athe) <- c("atheist", "total")
+pspain05athe$percent <- pspain05athe$total / sum(pspain05athe$total) * 100
+kable(pspain05athe)
+
+inference(spain05$response, est = "proportion", type = "ci", method = "theoretical", 
+          success = "atheist")
+```
+
+The 95% confidence interval for Spain 2005 is: ( 0.083 , 0.1177 ).
+
+```{r}
+spain12 <- subset(atheism, nationality == "Spain" & year == "2012")
+pspain12athe <- count(spain12$response == 'atheist')
+names(pspain12athe) <- c("atheist", "total")
+pspain12athe$percent <- pspain12athe$total / sum(pspain12athe$total) * 100
+kable(pspain12athe)
+
+inference(spain12$response, est = "proportion", type = "ci", method = "theoretical", 
+          success = "atheist")
+```
+
+The 95% confidence interval for Spain 2012 is: ( 0.0734 , 0.1065 ).
+
+```{r}
+spain <- subset(atheism, nationality == "Spain" & year == "2005"  | nationality == "Spain" & year == "2012")
+
+inference(y = spain$response, x = as.factor(spain$year), est = "proportion", type = "ht", null = 0, alternative = "twosided", method = "theoretical", success = "atheist")
+```
+
+The confidence interval does overlap; therefore there is no convincing evidence that the atheism index between 2005 and 2012 have changed significantly.
+
+b. Is there convincing evidence that the United States has seen a change in its atheism index between 2005 and 2012?
+
+H0: There is no convincing evidence that United States has seen a change in its atheism index between 2005 and 2012
+
+H0: p2005 - p2012 = 0
+
+HA: There is convincing evidence that United States has seen a change in its atheism index between 2005 and 2012
+
+HA: p2005 - p2012 != 0
+
+```{r}
+us05 <- subset(atheism, nationality == "United States" & year == "2005")
+pus05athe <- count(us05$response == 'atheist')
+names(pus05athe) <- c("atheist", "total")
+pus05athe$percent <- pus05athe$total / sum(pus05athe$total) * 100
+kable(pus05athe)
+
+inference(us05$response, est = "proportion", type = "ci", method = "theoretical", 
+          success = "atheist")
+```
+
+The 95% confidence interval for United States 2005 is: ( 0.0038 , 0.0161 ).
+
+```{r}
+us12 <- subset(atheism, nationality == "United States" & year == "2012")
+pus12athe <- count(us12$response == 'atheist')
+names(pus12athe) <- c("atheist", "total")
+pus12athe$percent <- pus12athe$total / sum(pus12athe$total) * 100
+kable(pus12athe)
+
+inference(us12$response, est = "proportion", type = "ci", method = "theoretical", 
+          success = "atheist")
+```
+
+The 95% confidence interval for United States 2012 is: ( 0.0364 , 0.0634 ).
+
+```{r}
+spain <- subset(atheism, nationality == "United States" & year == "2005"  | nationality == "United States" & year == "2012")
+
+inference(y = spain$response, x = as.factor(spain$year), est = "proportion", type = "ht", null = 0, alternative = "twosided", method = "theoretical", success = "atheist")
+```
+
+The confidence interval does not overlap; therefore there isconvincing evidence that the atheism index between 2005 and 2012 have changed significantly.
+
+### Problem 7
+
+If in fact there has been no change in the atheism index in the countries listed in Table 4, in how many of those countries would you expect to detect a change (at a significance level of 0.05) simply by chance?
+
+A Type 1 Error is rejecting the null hypothesis when H0 is actually true.  We want to avoid incorrectly rejecting H0 more than 5% of the time.  There are 39 countries in Table 4, therefore we expect no more than `r  round(39*.05, 0)` countries to change just by chance.
+
+### Problem 8
+
+Suppose you’re hired by the local government to estimate the proportion of residents that attend a religious service on a weekly basis. According to the guidelines, the estimate must have a margin of error no greater than 1% with 95% confidence. You have no idea what to expect for p. How many people would you have to sample to ensure that you are within the guidelines?
+Hint: Refer to your plot of the relationship between pp and margin of error. Do not use the data set to answer this question.
+
+```{r}
+p <- 0.5         # margin of error is largest when p is equal to 0.5
+ME <- .01        # margin of error no greater than 1%
+Z <- qnorm(.975) # 95% Confidence or alpha = 0.05
+
+# Margin of Error = Z * standard of error
+# Standard of error = Margin of Error/Z
+SE <- ME/Z
+
+# Standard of error <- sqrt(p*(1-p)/n)
+# Rearrange for n. n = (p*(1-p))/(standard of error)^2
+n <- (p * (1-p))/SE^2
+paste("Sample Needed: ", n)
+```

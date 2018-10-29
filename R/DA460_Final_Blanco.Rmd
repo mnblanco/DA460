@@ -1,0 +1,577 @@
+---
+title: "DA 460 Final Exam"
+author: "Marjorie Blanco"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options("scipen"=100, "digits"=4)
+library(devtools)
+library(readr)
+library(plyr)
+library(oilabs)
+library(statsr)
+set.seed(1)
+```
+
+```{r, echo=FALSE}
+plot_coeffs <- function(mlr_model) {
+      coeffs <- coefficients(mlr_model)
+      mp <- barplot(coeffs, col="#3F97D0", xaxt='n', main="Regression Coefficients")
+      lablist <- names(coeffs)
+      text(mp, par("usr")[3], labels = lablist, srt = 45, adj = c(1.1,1.1), xpd = TRUE, cex=0.6)
+}
+```
+
+# Final Exam Part 1 -- R
+
+## Problem 1
+
+Read the data set run10.csv (or run10.txt), and answer the following questions.
+
+### Question 1
+
+Download run10.csv (or run10.txt) and read corresponding data into R.
+
+```{r, results='hide', echo=FALSE}
+# read data set
+run <- read_csv("run10.csv")
+```
+
+```{r, echo=FALSE}
+# remove the NA in divTot
+run <- run[!is.na(run$divTot), ]
+run$gender <- as.factor(run$gender)
+```
+
+### Question 2
+
+Calculate the population mean and standard deviation for `divTot`. Apply `rep` function and `for` loop to collect 50 simple random samples of size 100 from `divTot`, and then use these stored statistics to calculate 50 confidence intervals of 95% confidence level for population mean.
+
+```{r}
+# the ground living area
+population <- run$divTot
+
+#Calculate the population mean and standard deviation for `divTot`
+summary(run$divTot)
+xlimits <- range(run$divTot)
+hist(run$divTot, main = "Histogramfor Div Tot", xlab = "divTot", xlim = xlimits, prob=TRUE)
+curve(dnorm(x, mean=mean(run$divTot), sd=sd(run$divTot)), add=TRUE)
+
+# create vector to save mean for 50 samples of size 100
+sample_means100 <- rep(NA, 50)
+# create vector to save standard deviation for 50 samples of size 100
+sample_sd <- rep(NA, 50)
+
+# sample size
+n <- 100
+
+for(i in 1:length(sample_means100)){
+   # simple random sample of size 100
+   samp <- sample(population, 100)        # save sample
+   sample_means100[i] <- mean(samp) # save sample mean in ith element of sample_means100
+   sample_sd[i] <- sd(samp)         # save sample sd in ith element of sample_sd
+}
+
+# histogram of mean for 50 samples of size 100
+xlimits <- range(sample_means100)
+hist(sample_means100, breaks = 20, xlim = xlimits, prob=TRUE)
+curve(dnorm(x, mean=mean(sample_means100), sd=sd(sample_sd)), add=TRUE)
+
+# construct the confidence intervals.
+lower_vector <- sample_means100 - qnorm(.975) * sample_sd / sqrt(n) 
+upper_vector <- sample_means100 + qnorm(.975) * sample_sd / sqrt(n)
+
+# display for confidence interval for first 5 random samples
+sample <- data.frame(lower_vector)
+sample$mean <- sample_means100
+sample$upper <- upper_vector
+head(sample, n=5)
+```
+
+The population mean is `r mean(population)` and standard deviation for `divTot` is `r sd(population)`.
+
+```{r}
+inference(y = divTot, data = run, statistic = "mean", type = "ci", null = 0, 
+          alternative = "twosided", method = "theoretical")
+```
+
+The 95 % confidence interval for the mean divTot is between 1428.1046 and 1452.5491
+
+### Question 3
+
+Apply function plot_ci to display all the 50 confidence intervals in question (2). What proportion of your confidence intervals include the true population mean? Is this proportion consistent with the confidence level? Why or why not?
+
+```{r}
+plot_ci(lower_vector, upper_vector, mean(population))
+
+# proportion calculation
+p <- 1-(sum(lower_vector > mean(population) | upper_vector < mean(population))/50)
+p
+```
+
+The `r p * 100`% of the confidence intervals include the true population mean. This proportion is not exactly equal to the confidence level of 95%.
+
+`r sum(lower_vector > mean(population) | upper_vector < mean(population))` out ofthe 50 intervals did not include the true mean, mu=`r round(mean(population), 3)`, which is roughly `r p*100`%.  About 95% will likely include the true value of the population.
+
+### Question 4
+
+Make a side-by-side boxplot of gender and divTot. What does the plot highlight about the relationship between these two variables?
+
+```{r}
+boxplot(run$divTot ~ run$gender, col="lightgray")
+
+by(run$divTot, run$gender, mean)
+```
+
+The mean divTot for female is significantly higher than the mean for divTot for male.
+
+### Question 5
+
+Calculate and a 95% confidence intervals for the difference between the mean of male divTot and the mean of female divTot, and interpret.
+
+```{r}
+run$gender <- as.factor(run$gender)
+
+divTotMale <- run[run$gender == "M", "divTot"]
+divTotFemale <- run[run$gender == "F", "divTot"]
+summary(divTotMale)
+summary(divTotFemale)
+summary(run$divTot)
+```
+
+```{r}
+inference(y = divTot, data = divTotMale, statistic = "mean", type = "ci", null = 0, 
+          alternative = "twosided", method = "theoretical")
+```
+
+The 95 % confidence interval the mean of divTot for male is between 1014.2339 and 1035.0091
+
+```{r}
+inference(y = divTot, data = divTotFemale, statistic = "mean", type = "ci", null = 0, 
+          alternative = "twosided", method = "theoretical")
+```
+
+The 95 % confidence interval the mean of divTot for female is between 1730.0229 and 1764.9623
+
+```{r}
+inference(y = divTot, x = gender, data = run, statistic = "mean", type = "ci", null = 0, 
+          alternative = "twosided", method = "theoretical",
+          order = c("F","M"))
+```
+
+The 95 % confidence interval for the difference between the mean of male divTot and the mean of female divTot is between 702.54 and 743.19
+
+### Question 6
+
+Conduct a hypothesis test at 95% significant level evaluating whether the mean of male divTot is different from the mean of female divTot? Make sure you indicate the hypotheses, the test rest, and the conclusion(s) clearly.
+
+H0: mu_divTot_female - mu_divTot_male = 0
+
+The mean of female divTot is the same as the mean of male divTot
+
+HA: mu_divTot_female - mu_divTot_male != 0 
+
+The mean of female divTot is different from the mean of male divTot
+
+```{r}
+# inference is use for conducting hypothesis tests and constructing confidence intervals
+inference(y = divTot, x = gender, data = run, statistic = "mean", type = "ht", null = 0, 
+          alternative = "twosided", method = "theoretical",
+          order = c("F","M"))
+```
+
+The p-value is less than 0.05 therefore we reject the null hypothesis in favor of the alternative hypothesis.  The mean of male divTot is different from the mean of female divTot.
+
+## Problem 2
+
+Read the data set smoking.csv (or smoking.txt), and answer the following questions.
+
+### Question 1
+
+Download smoking.csv (or smoking.txt) and read corresponding data into R.
+
+```{r, results='hide'}
+# read data set
+smoking <- read_csv("smoking.csv")
+```
+```{r}
+head(smoking)
+```
+
+### Question 2
+
+Create a new data frame that contains only the rows in smoking.csv associated with male smokers (Male for `gender` and Yes for `smoke`). Then, calculate the proportion of Divorced in `maritalStatus`.
+
+```{r}
+male_smoke <- smoking[smoking$gender == "Male" & smoking$smoke == "Yes", ]
+head(male_smoke)
+```
+
+```{r}
+p <- round(nrow(male_smoke[male_smoke$maritalStatus == "Divorced",])/nrow(male_smoke), 4)
+p
+
+male_smoke$maritalStatus2 <- male_smoke$maritalStatus 
+male_smoke[male_smoke$maritalStatus2 != "Divorced", "maritalStatus2"] <- "Not Divorced"
+```
+
+```{r}
+inference(y=maritalStatus2, data=male_smoke, type = "ci", success = "Divorced", statistic = "proportion", method = "theoretical")
+```
+
+The proportion of Divorced in `maritalStatus` is `r p*100`%
+
+### Question 3
+
+Check if the conditions for inference are reasonable. If so, apply `inference` function to calculate the standard error and construct a 95% confidence interval for the proportion of Divorced in `maritalStatus`.
+
+#### Independence
+
+The sample is random and we can assume that one runner’s run is independent of another.
+
+#### Success-failure
+
+np = `r nrow(male_smoke)` * `r p` = `r nrow(male_smoke) * p` >= 10
+
+n (1-p) = `r nrow(male_smoke)` * `r 1-p` = `r nrow(male_smoke) * (1-p)` >= 10
+
+The success-failure condition was met.
+
+### Question 4
+
+Based on the R output in question (3), what is the standard error and the margin of error for the estimate of the proportion of Divorced in `maritalStatus`?
+
+```{r, error=FALSE}
+inference(y = maritalStatus2, data = male_smoke, statistic = "proportion", type = "ci", method = "theoretical", 
+                   success = "Divorced")
+
+# Margin of error: z * (standard of error)
+# 95%: z = 1.96
+me <- qnorm(.975) * 0.0205
+me
+paste("Margin of Error: +/-", me)
+```
+
+The standard error is 0.0205.
+
+The margin of error is `r me`.
+
+We are 95% confident that the confidence interval between 0.0455 and 0.1257 covers the true population proportion.
+
+### Question 5
+
+Use simulation to show how the proportion affect the margin of error. Describe the relationship between the proportion and the margin of error.
+
+```{r}
+title <- paste( "p =" , toString(p), ", n =" , toString(nrow(male_smoke)), sep = " ")
+n <- nrow(male_smoke)
+p_hats <- rep(0, 5000)
+
+for(i in 1:length(p_hats)){
+  samp <- sample(c("Divorced", "Not Divorced"), n, replace = TRUE, prob = c(p, 1-p))
+  p_hats[i] <- sum(samp == "Divorced")/n
+}
+
+hist(p_hats, main = title, xlim = c(0, 0.18), prob=TRUE)
+curve(dnorm(x, mean=mean(p_hats), sd=sd(p_hats)), add=TRUE)
+
+# sample mean
+abline(v=mean(p_hats), col="red")
+# sample mean
+abline(v=median(p_hats), col="green")
+```
+
+```{r}
+n <- nrow(male_smoke)
+p <- seq(0, 1, 0.01)
+me <- 2 * sqrt(p * (1 - p)/n)
+plot(me ~ p, ylab = "Margin of Error", xlab = "Population Proportion")
+```
+
+```{r, echo=FALSE}
+p  <- 0.5
+```
+
+The proportion of 0.5 is the proportion that will have the largest margin of error (`r 2 * sqrt(p * (1 - p)/n)`). As p comes near to 0.5 the bigger margin of error will be and as p comes near 0 or 1 the lower margin of error will be.
+
+### Question 6
+
+Apply `for` loop to simulate the process of drawing 300 samples of size 1000 from a population with a true Divorced proportion of 0.3. For each of the 3000 samples, compute 𝑝̂ and then plot a histogram to visualize the distribution. Describe the sampling distribution of the sample proportions. Be sure to note the center, spread, and shape clearly.
+
+Case: Sample size = 300, n=1000 and p=0.3
+
+```{r}
+p <- 0.3
+n <- 1000
+size <- 300
+p_hats <- rep(0, size)
+
+title <- paste( "Sample size =", size, "p =" , toString(p), ", n =" , toString(nrow(male_smoke)), sep = " ")
+
+for(i in 1:length(p_hats)){
+  samp <- sample(c("Divorced", "NonDivorced"), n, replace = TRUE, prob = c(p, 1-p))
+  p_hats[i] <- sum(samp == "Divorced")/n
+}
+
+hist(p_hats, main = title, xlim = c(min(p_hats)-0.05, max(p_hats)+0.05), prob=TRUE)
+curve(dnorm(x, mean=mean(p_hats), sd=sd(p_hats)), add=TRUE)
+
+# sample mean
+abline(v=mean(p_hats), col="red")
+# sample mean
+abline(v=median(p_hats), col="green")
+
+summary(p_hats)
+```
+
+The mean is `r round(mean(p_hats), 3)`, median is `r round(median(p_hats), 3)`, and the range is between `r min(p_hats)` to `r max(p_hats)`.
+
+The data follow follows a normal distribution.
+
+- Mean: `r mean(p_hats)`
+
+- Median: `r median(p_hats)`
+
+- SD: `r sd(p_hats)`
+
+Case: Sample size = 3000, n=1000 and p=0.3
+
+```{r}
+p <- 0.3
+n <- 1000
+size <- 3000
+p_hats <- rep(0, size)
+
+title <- paste( "Sample size =", size, "p =" , toString(p), ", n =" , toString(nrow(male_smoke)), sep = " ")
+
+for(i in 1:length(p_hats)){
+  samp <- sample(c("Divorced", "NonDivorced"), n, replace = TRUE, prob = c(p, 1-p))
+  p_hats[i] <- sum(samp == "Divorced")/n
+}
+
+hist(p_hats, main = title, xlim = c(min(p_hats)-0.05, max(p_hats)+0.05), prob=TRUE)
+curve(dnorm(x, mean=mean(p_hats), sd=sd(p_hats)), add=TRUE)
+
+# sample mean
+abline(v=mean(p_hats), col="red")
+# sample mean
+abline(v=median(p_hats), col="green")
+
+summary(p_hats)
+```
+
+The mean is `r round(mean(p_hats), 3)`, median is `r round(median(p_hats), 3)`, and the range is between `r min(p_hats)` to `r max(p_hats)`.
+
+The data follow follows a normal distribution.
+
+- Mean: `r mean(p_hats)`
+
+- Median: `r median(p_hats)`
+
+- SD: `r sd(p_hats)`
+
+## Problem 3
+
+### Question 1
+
+Download diamonds.csv (or diamonds.txt) and read corresponding data into R.
+
+```{r, results='hide'}
+# read data set
+diamonds <- read_csv("diamonds.csv")
+```
+
+```{r}
+head(diamonds)
+```
+
+### Question 2
+
+What type of plot is the most appropriate one to display the relationship between `price` and `carat`? Plot this relationship using the variable `carat` as the predictor. Does the relationship look linear?
+
+The scatter plot is the type of plot is the most appropriate one to display the relationship between `price` and `carat`.  The relationship  between `price` and `carat` appear to be linear.
+
+```{r}
+fit <- lm(price ~ carat, data = diamonds)
+fit
+
+fit <- lm(diamonds$price ~ diamonds$carat)
+plot(diamonds$price ~ diamonds$carat)
+abline(fit, col="red")
+```
+
+### Question 3
+
+If the relationship looks linear in question (2), what is the correlation coefficient? Interpret this result.
+
+```{r}
+model_cor <- cor(diamonds$carat, diamonds$price)
+model_cor
+```
+
+The correlation coefficient is `r model_cor`, which indicates a strong positive relationship.
+
+### Question 4
+
+Fit a simple linear model (use `carat` to predict `price`). Using the estimates from the R output, write down the regression equation. What are the y-intercept and the slope? Interpret the regression line. Is variable carat significant? Why or why not? What is the coefficient of determination? Interpret the results. 
+
+The y-intercept is `r round(fit$coefficients[1], 0)`. The slope for `carat` is `r round(fit$coefficients[2], 0)`. The variable `carat` is significant because the p-value is less than 0.05.  The coefficient of determination is 0.849.
+
+price = 7756 * carat - 2256
+
+```{r}
+fit
+summary(fit)
+
+summary(diamonds$carat)
+summary(diamonds$price)
+```
+
+When the diamond carat goes up by 1, we would expect the price to go up by 7756 when all other variables are held constant
+
+When the diamond carat is 0 we would expect the price to be - 2256.  The intercept is of no interest, not very useful, and also not reliable
+since the predicted value of the intercept  so far from the bulk of the data.  The minimun carat is `r min(diamonds$carat)`.
+
+
+### Question 5
+
+Fit a multiple linear model with `carat`, `depth`, and `table` as independent variables, and variable `price` as dependent variable. Using the estimates from the R output, write down the regression equation. What are the y-intercept and the slopes? Interpret the regression line. Are all the independent variables in the model significant? Why or why not? What is the coefficient of determination? Interpret the result, and compare it with question (4). 
+
+```{r}
+fit <- lm(price ~ carat + depth + table , data = diamonds)
+fit
+summary(fit)
+
+plot_coeffs(fit)
+```
+
+The y-intercept is `r round(fit$coefficients[1], 0)`. The slope for `carat` is `r round(fit$coefficients[2], 0)`. The slope for `depth` is `r round(fit$coefficients[3], 0)`.  The slope for `table` is `r round(fit$coefficients[4], 0)`.The variable `carat`, `depth` and `table` are significant because the p-value is less than 0.05.  The coefficient of determination is 0.854.
+  
+price = 7859 * carat - 151 * depth - 104 * table + 13003
+
+When the diamond carat goes up by 1, we would expect the price to go up by 7859 when all other variables are held constant
+
+When the diamond depth goes up by 1, we would expect the price to go down by 151 when all other variables are held constant
+
+When the diamond table goes up by 1, we would expect the price to go down by 104 when all other variables are held constant
+
+When the diamond carat, depth and table is 0 we would expect the price to be 13003.  The intercept is of no interest, not very useful, and also not reliable since the predicted value of the intercept  so far from the bulk of the data.  The minimun for carat is `r min(diamonds$carat)`, depth is `r min(diamonds$depth)`, and table is `r min(diamonds$table)`.
+
+#The model R2 in question #4 is 0.849 while question #5 is 0.854.  This model is more complex and only increases R2 slighly.
+
+The model residual standard error in question #4 is 1550 while question #5 is 1530.
+
+## Question 6
+
+Using backward-selection and p-value as the selection criterion, determine the best model. You do not need to show all steps in your answer, just the output for the final model. Also, write down the final regression equation and interpret it.
+
+```{r}
+m_full <- lm(price ~ carat + cut + color + clarity + depth + table + x + y + z, data = diamonds)
+summary(m_full)
+
+# remove y because p-value is the highest
+m_1 <- lm(price ~ carat + cut + color + clarity + depth + table + x + z, data = diamonds)
+summary(m_1)
+
+# remove z because p-value is the highest
+m_2 <- lm(price ~ carat + cut + color + clarity + depth + table + x, data = diamonds)
+summary(m_2)
+
+# check solution
+backwards <- step(m_full, direction = "backward", trace=TRUE ) 
+```
+
+### Question 7
+
+What are the conditions to validate the model? Apply appropriate plots to check these conditions. Are all conditions passed? Is the model valid? Why or why not?
+
+#### Linearity
+
+The relationship between the explanatory and the response variable should be linear.
+
+#### Nearly normal residuals
+
+Both the histogram and probability plot show that the residual are not nearly normal.  The majority of the residuals fall on the line but some do not. There are two tails.  The residual are not nearly normal because of outliers or concerns and influential points.
+
+```{r}
+# Nearly normal residuals
+hist(m_2$residuals)
+boxplot(m_2$residuals)
+
+# normal probability plot of the residuals
+qqnorm(m_2$residuals)
+qqline(m_2$residuals)  # adds diagonal line to the normal prob plot
+
+plot(m_2)
+```
+
+#### Constant variability
+
+The variability of points around the least squares line should be roughly constant but they are not.
+
+#### No extreme outliers
+
+The plot show a number of extreme outliers and influential points.
+
+#### Independent observations
+
+The observations are independent.
+
+### Question 8
+
+Based on your final model, what are the most important factors that influence the selling price of a diamond? Why?
+
+There are many factors that can influence how much a consumer pays for a particular diamond. Most know the 4Cs – Cut, Color, Clarity and Carat.
+
+When `carat` increases by 1, we would expect the price to go up by 11256.97 `r round(m_2$coefficients["carat"], 2)` when all other variables are held constant.
+
+When `cut` is Fair, we would expect the price to no increase or decrease when all other variables are held constant.
+
+When `cut` is Good, we would expect the price to go up by `r round(m_2$coefficients["cutGood"], 2)` when all other variables are held constant.
+
+When `cut` is Ideal, we would expect the price to go up by `r round(m_2$coefficients["cutIdeal"], 2)` when all other variables are held constant.
+
+When `cut` is Premium, we would expect the price to go up by `r round(m_2$coefficients["cutPremium"], 2)` when all other variables are held constant.
+
+When `cut` is Very Good, we would expect the price to go up by `r round(m_2$coefficients["cutVery Good"], 2)` when all other variables are held constant.
+
+When `clarity` is IF, we would expect the price to no increase or decrease when all other variables are held constant.
+
+When `clarity` is IF, we would expect the price to go up by `r round(m_2$coefficients["clarityIF"], 2)` when all other variables are held constant.
+
+When `clarity` is SI1, we would expect the price to go up by `r round(m_2$coefficients["claritySI1"], 2)` when all other variables are held constant.
+
+When `clarity` is SI2, we would expect the price to go up by `r round(m_2$coefficients["claritySI2"], 2)` when all other variables are held constant.
+
+When `clarity` is VS1, we would expect the price to go up by `r round(m_2$coefficients["clarityVS1"], 2)` when all other variables are held constant.
+
+When `clarity` is VS2, we would expect the price to go up by `r round(m_2$coefficients["clarityVS2"], 2)` when all other variables are held constant.
+
+When `clarity` is VVS1, we would expect the price to go up by `r round(m_2$coefficients["clarityVVS1"], 2)` when all other variables are held constant.
+
+When `clarity` is VVS2, we would expect the price to go up by `r round(m_2$coefficients["clarityVVS2"], 2)` when all other variables are held constant.
+
+When `color` is D, we would expect the price to no increase or decrease when all other variables are held constant.
+
+When `color` is E, we would expect the price to go down by `r round(m_2$coefficients["colorE"], 2)` when all other variables are held constant.
+
+When `color` is F, we would expect the price to go down by `r round(m_2$coefficients["colorF"], 2)` when all other variables are held constant.
+
+When `color` is G, we would expect the price to go down by `r round(m_2$coefficients["colorG"], 2)` when all other variables are held constant.
+
+When `color` is H, we would expect the price to go down by `r round(m_2$coefficients["colorH"], 2)` when all other variables are held constant.
+
+When `color` is I, we would expect the price to go down by `r round(m_2$coefficients["colorI"], 2)` when all other variables are held constant.
+
+When `color` is J, we would expect the price to go down by `r round(m_2$coefficients["colorJ"], 2)` when all other variables are held constant.
+
+When `x` increases by 1, we would expect the price to go down by `r round(m_2$coefficients["x"], 2)` when all other variables are held constant.
+
+When `depth` increases by 1, we would expect the price to go down by `r round(m_2$coefficients["depth"], 2)` when all other variables are held constant.
+
+When `table` increases by 1, we would expect the price to go down by `r round(m_2$coefficients["table"], 2)` when all other variables are held constant.

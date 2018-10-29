@@ -2,7 +2,9 @@
 title: "DA 460 - Assignment 1"
 author: "Marjorie Blanco"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -23,16 +25,17 @@ Make a scatterplot of weight versus desired weight. Describe the relationship be
 source("http://www.openintro.org/stat/data/cdc.R")
 ```
 
-The following is a scatterplot shows respondent's desired weight against weight. There appears to be positive association/relationship between desired weight and weight.  Intuition suggests that respondent's desired weight will be lower than their weight.
+The following is a scatterplot shows respondent's desired weight (wtdesire) against current weight (weight). There appears to be positive association/relationship between desired weight and weight.  Intuition suggests that respondent's desired weight will be lower than their weight.
 
 ```{r}
 plot(cdc$wtdesire, cdc$weight, main="Desired Weight vs. Weight", 
      ylab = "Weight", xlab="Desired Weight",
      sub="Data Source: CDC BRFSS")
 
-library(ggplot2)
 ggplot(cdc, aes(cdc$wtdesire, cdc$weight)) + 
-  geom_point(aes(color = gender))
+  geom_point(aes(color = gender)) +
+  ylab("Weight") +
+  xlab("Desired Weight")
 ```
 
 ## Problem 2

@@ -1,0 +1,400 @@
+---
+title: "DA 460 Midterm Exam"
+author: "Marjorie Blanco"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options("scipen"=100, "digits"=4)
+library(readr)
+setwd("~/GitHub/A-DA460/Final/")
+set.seed(1)
+```
+
+# Midterm Exam Part 1 -- R
+
+## Problem 1
+
+Researchers did investigation on the situation of smoking in Great Britain and got the sample data set smoking.csv (or smoking.txt), read the data set and answer the following questions.
+
+### Question 1
+
+Download smoking.csv (or smoking.txt) and read corresponding data into R. 
+
+```{r, results='hide'}
+# read data set
+smoking <- read_csv("smoking.csv")
+```
+
+### Question 2
+
+- How many observations are there in this data set? 
+
+The dimensions of the data frame is `r dim(smoking)`.  There are `r dim(smoking)[1]` observations and `r dim(smoking)[2]` variables in the smoking data set.  The variable names are: `r names(smoking)`. 
+
+```{r}
+# dimensions of the data frame 
+dim(smoking)
+```
+
+- How many variables, and what are they? 
+
+There are `r dim(smoking)[2]` variables in this data set.  The variable names are: `r names(smoking)`. 
+
+- gender: A categorical vector
+- age: A numerical vector
+- maritalStatus: A categorical vector     
+- highestQualification: A categorical vector
+- nationality: A categorical vector
+- ethnicity: A categorical vector     
+- grossIncome: A categorical vector
+- region: A categorical vector
+- smoke: A categorical vector
+- amtWeekends: A numerical vector (with NA)
+- amtWeekdays: A numerical vector (with NA)
+- type: A categorical vector
+
+```{r}
+# number of observations (rows)
+dim(smoking)[1]
+
+# number of variables (columns)
+dim(smoking)[2]
+
+# variable names
+ names(smoking)
+
+# structure 
+str(smoking)
+```
+
+```{r}
+# barplot
+barplot(table(smoking$gender), main = "Frequency table for Gender",
+       xlab = "Gender", ylab = "Frequency")
+hist(table(smoking$age), main = "Frequency table for Age",
+       xlab = "Age", ylab = "Frequency")
+barplot(table(smoking$maritalStatus), main = "Frequency table for Marital Status",
+       xlab = "Marital Status", ylab = "Frequency")
+barplot(table(smoking$highestQualification), main = "Frequency table for Highest Qualification",
+       xlab = "Highest Qualification", ylab = "Frequency", las=2)
+barplot(table(smoking$nationality), main = "Frequency table for Nationality",
+       xlab = "Nationality", ylab = "Frequency")
+barplot(table(smoking$ethnicity), main = "Frequency table for Ethnicity",
+       xlab = "Ethnicity", ylab = "Frequency")
+barplot(table(smoking$grossIncome), main = "Frequency table for Gross Income",
+       xlab = "Gross Income", ylab = "Frequency", las=2)
+barplot(table(smoking$smoke), main = "Frequency table for Smoke",
+       xlab = "Smoke", ylab = "Frequency")
+barplot(table(smoking$region), main = "Frequency table for Region",
+       xlab = "Region", ylab = "Frequency")
+barplot(table(smoking$amtWeekends), main = "Frequency table for Amount Weekends",
+       xlab = "Amount Weekends", ylab = "Frequency")
+barplot(table(smoking$amtWeekdays), main = "Frequency table for Amount Weekdays",
+       xlab = "Amount Weekdays", ylab = "Frequency")
+barplot(table(smoking$type), main = "Frequency table for Type",
+       xlab = "Type", ylab = "Frequency")
+```
+
+- What is the 300th observation of `nationality`?
+
+The 300th observation of nationality is `r smoking[300, "nationality"]`.
+
+```{r}
+# 300th observation of nationality
+smoking[300, "nationality"]
+```
+
+### Question 3
+
+Create a numerical summary for `age` and compute the interquartile range. Compute the relative frequency distribution for `gender`. How many males are in the sample?
+
+Interquartile range for age is between `r min(smoking$age)` and `r max(smoking$age)` with a range of `r max(smoking$age) - min(smoking$age)`. 
+
+The are `r sum(smoking$gender == "Male")` males in the sample.
+
+```{r}
+summary(smoking$age)
+
+hist(smoking$age, main="Histogram of Age", 
+     xlab = "Age", prob=TRUE)
+curve(dnorm(x, mean=mean(smoking$age), sd=sd(smoking$age)), add=TRUE)
+
+table(smoking$gender)
+
+# relative frequency distribution for gender
+table(smoking$gender) / length(smoking$gender)
+```
+
+### Question 4
+
+Using numerical summaries and a side-by-side box plot, determine if male smokers are as old as female smokers.
+
+```{r}
+# create subset
+female = subset(smoking$age, smoking$gender == "Female")
+male = subset(smoking$age, smoking$gender == "Male")
+
+# summary for age for female and male subset
+summary(female)
+summary(male)
+
+# boxplot of age by gender
+boxplot(smoking$age ~ smoking$gender, main="Boxplot of Age", 
+     ylab = "Age", xlab = "Gender")
+```
+
+Males smokers are as old as female smokers.  The age range for female is between `r min(female)` and `r max(female)`.  The age range for male is between `r min(male)` and `r max(male)`.
+ 
+### Question 5
+
+Create a bar chart or frequency table for `maritalStatus`, what is the proportion for Divorced, Single, Married, and Widowed, respectively? What can you interpret from these numbers?
+
+```{r}
+
+smoking$maritalStatus <- factor(smoking$maritalStatus, levels = c("Married", "Single",  "Widowed", "Divorced", "Separated"))
+
+barplot(table(smoking$maritalStatus), main="Barplot of Marital Status", 
+     xlab = "Marital Status", ylab = "Frequency")
+
+table(smoking$maritalStatus)
+
+# relative frequency distribution for maritalStatus
+ans <- table(smoking$maritalStatus) / length(smoking$maritalStatus)
+ans
+```
+
+The proportion for Divorced, Single, Married, and Widowed are `r round(ans["Divorced"]*100, 3)`%, `r round(ans["Single"]*100, 3)`%, `r round(ans["Married"]*100, 3)`% and `r round(ans["Widowed"]*100, 3)`% respectively.  There are roughly twice as many married than single. There are roughly twice as many single than windowed. There are roughly five times as many married than divorced.
+
+## Problem 2
+
+Apply R simulation to answer the following questions:
+
+### Question 1
+
+Suppose we’re flipping an unfair coin that we know only lands heads 30% of the time. Please simulate this flip 10 times, what is the proportion of heads? If you simulate this flip 100 times, what is the proportion of heads now?
+
+```{r, results='hide'}
+# possible outcome H: heads T: tails
+outcomes <- c("H", "T")
+# number of simulated coin flips
+sampleSize = 10
+# flipping an unfair coin lands heads 30% of the time
+head = 0.3
+```
+
+```{r}
+# run simulation 10 coin flips
+sim_coin_flip10 <- sample(outcomes, size = sampleSize, replace = TRUE, prob = c(head, 1 - head))
+# view the results of this simulation
+table(sim_coin_flip10)
+
+# relative frequency distribution
+ans <- table(sim_coin_flip10) / length(sim_coin_flip10)
+ans
+# simulation distribution
+barplot(table(sim_coin_flip10), main = "Simulated Unfair Coin Flip with a 30% probability of landing heads (10 flips)",
+        sub = "First Coin Flip Simulation", xlab = "Coin Side", ylab = "Frequency", cex.main=0.8)
+```
+
+The proportion that land on head is `r ans["H"]*100`%.
+
+```{r}
+# number of simulated coin flips
+sampleSize = 100
+
+# run simulation 100 coin flips
+sim_coin_flip100 <- sample(outcomes, size = sampleSize, replace = TRUE, prob = c(head, 1 - head))
+# view the results of this simulation
+table(sim_coin_flip100)
+
+# relative frequency distribution
+ans <- table(sim_coin_flip100) / length(sim_coin_flip100)
+ans
+
+# simulation distribution
+barplot(table(sim_coin_flip100), main = "Simulated Unfair Coin Flip with a 30% probability of landing heads (100 flips)",
+        sub = "Second Coin Flip Simulation", xlab = "Coin Side", ylab = "Frequency", cex.main=0.8)
+```
+
+The proportion that land on head is `r ans["H"]*100`%.
+
+### Question 2
+
+Suppose we’re flipping an unfair dice and the corresponding probability of landing 1, 2, 3, 4, 5, and 6 is 0.05, 0.1, 0.15, 0.2, 0.3, and 0.2, respectively. If you simulate this flip 10 times, what is the proportion of land on side 5? Simulate this flip 100 times, what is the proportion of side 5 now?
+
+```{r, results='hide'}
+# possible outcome 1, 2, 3, 4, 5, and 6
+outcomes <- 1:6
+# number of simulated dice flips
+sampleSize = 10
+# corresponding probability of landing 1, 2, 3, 4, 5, and 6
+prop_outcome = c(0.05, 0.1, 0.15, 0.2, 0.3, 0.2)
+```
+
+```{r}
+# run simulation 10 dice flips
+sim_dice_flip10 <- sample(outcomes, size = sampleSize, replace = TRUE, prob = prop_outcome)
+# view the results of this simulation
+table(sim_dice_flip10)
+
+# relative frequency distribution
+ans <- table(sim_dice_flip10) / length(sim_dice_flip10)
+ans
+
+# simulation distribution
+barplot(table(sim_dice_flip10), main = "Unfair dice flip simulation (10 dice flips)",
+        sub = "First Dice Flip Simulation", xlab = "Dice Side", ylab = "Frequency")
+```
+
+The proportion that land on side 5 is `r ans["5"]*100`%.
+
+```{r}
+# number of simulated dice flips
+sampleSize = 100 
+# run simulation 100 dice flips
+sim_dice_flip100 <- sample(outcomes, size = sampleSize, replace = TRUE, prob = prop_outcome)
+
+# view the results of this simulation
+table(sim_dice_flip100)
+
+# relative frequency distribution
+ans <- table(sim_dice_flip100) / length(sim_dice_flip100)
+ans
+# simulation distribution
+barplot(table(sim_dice_flip100), main = "Unfair dice flip simulation (100 dice flips)",
+        sub = "Second Dice Flip Simulation", xlab = "Dice Side", ylab = "Frequency")
+```
+
+The proportion that land on side 5 is `r ans["5"]*100`%.
+
+### Question 3 
+
+Compare the proportions in each questions above, what conclusion can you draw? Does the number of simulations affect the proportions? If so, how? Please explain in details.
+
+The number of simulations did affect the proportions.  The proportions has less variability with large sample sizes than with small sample sizes.  The proportion from the larger sample will be closer to the corresponding probablity.
+
+```{r}
+# relative frequency distribution for 10 coin flip
+table(sim_coin_flip10) / length(sim_coin_flip10)
+# relative frequency distribution for 100 coin flip
+table(sim_coin_flip100) / length(sim_coin_flip100)
+# relative frequency distribution for 10 dice flip
+table(sim_dice_flip10) / length(sim_dice_flip10)
+# relative frequency distribution for 100 dice flip
+table(sim_dice_flip100) / length(sim_dice_flip100)
+```
+
+## Problem 3
+Data set countyComplete.csv (or countyComplete.txt) shows the population information from all counties in US, apply this data set to answer the following questions:
+
+### Question 1
+
+Download countyComplete.csv (or countyComplete.txt) and read corresponding data into R.
+
+```{r, results='hide'}
+# read data set
+county <- read_csv("countyComplete.csv")
+```
+
+### Question 2
+
+Make a histogram of `pop2010`, how can you describe its distribution, bell-shaped or normal? Is it right skewed or left sewed?
+
+```{r}
+summary(county$pop2010)
+
+# boxplot of pop2010
+boxplot(county$pop2010, main="Boxplot of pop2010", 
+     ylab = "POP 2010")
+
+# histogram for pop2010
+hist(county$pop2010, breaks = 100, main = "Histogram for pop2010", xlab = "pop2010",
+     sub="Data Source: County Complete", prob=TRUE)
+curve(dnorm(x, mean=mean(county$pop2010), sd=sd(county$pop2010)), add=TRUE)
+
+# construct a normal probability plot
+qqnorm(county$pop2010)
+qqline(county$pop2010)
+```
+
+The distribution for `pop2010` is not normally distributed but right skewed. The median (`r round(median(county$pop2010), 0)`) is less than the mean (`r round(mean(county$pop2010), 3)`).
+
+The data follow does not follow a normal distribution.
+
+- Mean: `r round(mean(county$pop2010), 3)`
+
+- Median: `r median(county$pop2010)`
+
+- SD: `r round(sd(county$pop2010), 3)`
+
+### Question 3
+
+Create a new subset named Washington which contains only the observations of Washington, and then make a histogram of pop2010, how can you describe its distribution, bell-shaped or normal? Is it right skewed or left sewed? Compare this with question 1.
+
+```{r}
+Washington = subset(county$pop2010, county$state == "Washington")
+summary(Washington)
+
+# boxplot of pop2010 for state = Washington
+boxplot(Washington, main="Boxplot of pop2010 (Washington)", 
+     ylab = "POP 2010")
+
+# histogram for pop2010 for state = Washington
+hist(Washington, breaks = 100, main = "Histogram for pop2010 (Washington)", xlab = "pop2010",
+     sub="Data Source: County Complete", prob=TRUE)
+curve(dnorm(x, mean=mean(Washington), sd=sd(Washington)), add=TRUE)
+
+# construct a normal probability plot
+qqnorm(Washington)
+qqline(Washington)
+```
+
+The distribution for `Washington` is not normally distributed but right skewed. The median (`r round(median(Washington), 0)`) is less than the mean (`r round(mean(Washington), 0)`) .
+
+The data follow does not follow a normal distribution.
+
+- Mean: `r mean(Washington)`
+
+- Median: `r median(Washington)`
+
+- SD: `r sd(Washington)`
+
+### Question 4
+
+Based on the subset Washington, make a normal probability plot of pop2010. Do all of the points fall on the line? How does this plot compare to the probability plot of the original data?
+
+Not all of the points fall on the line for both the country and Washington data set.  Both probability plot are very similar.
+
+```{r}
+# construct a normal probability plot for data set (county)
+qqnorm(county$pop2010)
+qqline(county$pop2010)
+
+# construct a normal probability plot for data set (Washington)
+qqnorm(Washington)
+qqline(Washington)
+```
+
+### Question 5
+
+Suppose the variable pop2010 has a normal distribution, what is the probability that pop2010 is greater than 102,410? What is the probability that pop2010 is between 190,000 and 1,000,000?
+
+```{r}
+# calculate probability by calculating a Z score and consulting a Z table, theoretical
+prop1 <- 1 - pnorm(q = 102410, mean = mean(county$pop2010), sd = sd(county$pop2010))
+prop1
+```
+
+```{r}
+# calculate probability by calculating a Z score and consulting a Z table, theoretical
+prop2 <- pnorm(q = 1000000, mean = mean(county$pop2010), sd = sd(county$pop2010)) - pnorm(q = 190000, mean = mean(county$pop2010), sd = sd(county$pop2010))
+prop2
+```
+
+The probability that pop2010 is greater than 102,410 is `r round(prop1 * 100, 2)`%.
+The probability that pop2010 is between 190,000 and 1,000,000 is `r round(prop2 * 100, 2)`%.
